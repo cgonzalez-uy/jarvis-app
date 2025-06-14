@@ -23,7 +23,11 @@ import {
   Download,
   RefreshCw,
   X,
-  Building2
+  Building2,
+  Sparkles,
+  Zap,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import MigracionesPage from './MigracionesPage';
 
@@ -145,7 +149,7 @@ const MigracionesDashboard = () => {
   if (showNew && !vdcName) {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200">
           {/* Modal Header */}
           <div className="relative bg-slate-50 border-b border-slate-200 p-6 rounded-t-2xl">
             <button
@@ -162,6 +166,32 @@ const MigracionesDashboard = () => {
               <div>
                 <h2 className="text-xl font-semibold text-slate-800">Nueva Migración</h2>
                 <p className="text-sm text-slate-600 mt-1">Configura una nueva migración VCF</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Future Automation Banner */}
+          <div className="mx-6 mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-semibold text-indigo-800">Próximamente: Migración Inteligente</h3>
+                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+                    Futuro
+                  </span>
+                </div>
+                <p className="text-xs text-indigo-700 leading-relaxed">
+                  En versiones futuras, <strong>Jarvis</strong> automatizará completamente este proceso. 
+                  Solo necesitarás proporcionar las credenciales de vCenter y la migración se ejecutará 
+                  automáticamente sin cargar archivos manualmente.
+                </p>
+                <div className="flex items-center gap-1 mt-2 text-xs text-indigo-600">
+                  <Zap className="w-3 h-3" />
+                  <span className="font-medium">IA + Automatización = Migración sin esfuerzo</span>
+                </div>
               </div>
             </div>
           </div>
@@ -184,13 +214,28 @@ const MigracionesDashboard = () => {
               </p>
             </div>
             
+            {/* Current Process Info */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-amber-800 mb-1">Proceso Actual</h4>
+                  <p className="text-xs text-amber-700">
+                    Por ahora, necesitarás cargar manualmente los archivos de evaluación V2T, 
+                    Edge Gateways y VDC para proceder con la migración.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <div className="flex gap-3">
               <button
                 onClick={() => inputVdc.trim() && setVdcName(inputVdc.trim())}
                 disabled={!inputVdc.trim()}
-                className="flex-1 bg-primary-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Continuar
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={handleCloseNew}
