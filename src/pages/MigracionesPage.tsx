@@ -18,7 +18,9 @@ import {
   PlayCircle,
   TrendingUp,
   Sparkles,
-  Maximize2
+  Maximize2,
+  Save,
+  Check
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { validateV2TReport, validateEdgeGatewayReport, validateVDCReport } from '../services/fileValidation';
@@ -76,6 +78,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
   const [isDragging, setIsDragging] = useState<number | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
     blockingIssues?: string[];
     warnings?: string[];
@@ -83,8 +86,9 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     htmlReport?: string;
   } | null>(null);
   const [reportFullscreen, setReportFullscreen] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [selectedWebhook, setSelectedWebhook] = useState<string>("");
   const [webhookError, setWebhookError] = useState("");
@@ -96,6 +100,11 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     }
     // eslint-disable-next-line
   }, [activeStep, token]);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   async function fetchWebhooks() {
     try {
@@ -110,6 +119,66 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
       setWebhooks([]);
     }
   }
+
+  const saveMigrationToDatabase = async () => {
+    if (!vdcName.trim() || !user) {
+      showNotification('error', 'Datos incompletos para guardar la migración');
+      return false;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const migrationData = {
+        vdc: vdcName.trim(),
+        fecha_creacion: new Date().toISOString(),
+        estado: 'Assessment', // Estado inicial después del análisis
+        usuario: user.username || user.email || 'Usuario desconocido',
+        // Campos adicionales que podrían ser útiles
+        archivos_procesados: files.filter(f => f.file).map(f => f.file!.name),
+        webhook_utilizado: webhooks.find(w => w.id === selectedWebhook)?.name || 'N/A',
+        tiene_reporte: !!analysisResult?.htmlReport
+      };
+
+      const apiUrl = getApiUrl('/collections/migraciones/records');
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify(migrationData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const savedMigration = await response.json();
+      console.log('Migración guardada exitosamente:', savedMigration);
+      
+      showNotification('success', `Migración "${vdcName}" guardada exitosamente`);
+      return true;
+      
+    } catch (error) {
+      console.error('Error al guardar la migración:', error);
+      showNotification('error', `Error al guardar la migración: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFinalizeMigration = async () => {
+    const success = await saveMigrationToDatabase();
+    if (success && onClose) {
+      // Pequeño delay para que se vea la notificación antes de cerrar
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
@@ -215,13 +284,16 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
       const result = await sendFilesToAnalysis(validFiles, webhookPath);
       if (result.success) {
         setAnalysisResult(result);
+        showNotification('success', '¡Análisis completado exitosamente!');
       } else {
         console.error('Error en el análisis:', result.message);
         setWebhookError(result.message);
+        showNotification('error', `Error en el análisis: ${result.message}`);
       }
     } catch (error) {
       console.error('Error al enviar archivos:', error);
       setWebhookError('Error al enviar archivos para análisis');
+      showNotification('error', 'Error al enviar archivos para análisis');
     } finally {
       setIsAnalyzing(false);
     }
@@ -641,6 +713,35 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
               />
             </div>
           </div>
+
+          {/* Action Buttons - Solo mostrar cuando el análisis esté completo */}
+          <div className="p-6 border-t border-slate-200 bg-slate-50">
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleFinalizeMigration}
+                disabled={isSaving}
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg text-lg"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Guardando migración...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-6 h-6" />
+                    Finalizar y Guardar Migración
+                  </>
+                )}
+              </button>
+            </div>
+            
+            <div className="text-center mt-4">
+              <p className="text-sm text-slate-600">
+                Al finalizar, la migración se guardará en el sistema y podrás verla en el listado principal
+              </p>
+            </div>
+          </div>
         </div>
       );
     }
@@ -703,6 +804,26 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-20 right-4 z-50 max-w-md">
+          <div className={`p-4 rounded-xl shadow-lg border-l-4 ${
+            notification.type === 'success' 
+              ? 'bg-emerald-50 border-emerald-400 text-emerald-800'
+              : notification.type === 'error'
+              ? 'bg-red-50 border-red-400 text-red-800'
+              : 'bg-blue-50 border-blue-400 text-blue-800'
+          }`}>
+            <div className="flex items-center gap-3">
+              {notification.type === 'success' && <Check className="w-5 h-5 text-emerald-600" />}
+              {notification.type === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
+              {notification.type === 'info' && <AlertCircle className="w-5 h-5 text-blue-600" />}
+              <span className="font-medium">{notification.message}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900/95 via-primary-950/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10">
         <div className="px-8 py-6">
