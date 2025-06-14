@@ -272,7 +272,7 @@ tunnels:
               <div>
                 <h5 className="font-semibold text-purple-700 mb-2">4. Buscar TODOS los archivos ngrok.yml en tu sistema:</h5>
                 <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-                  <span>dir C:\ /S /B ngrok.yml 2>nul</span>
+                  <span>dir C:\ /S /B ngrok.yml 2&gt;nul</span>
                   <button 
                     onClick={() => copyToClipboard('dir C:\\ /S /B ngrok.yml 2>nul')}
                     className="p-1 hover:bg-gray-800 rounded text-white"
