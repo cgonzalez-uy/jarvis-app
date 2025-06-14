@@ -30,6 +30,8 @@ import {
   Info
 } from 'lucide-react';
 import MigracionesPage from './MigracionesPage';
+import { useAuth } from '../hooks/useAuth';
+import { getApiUrl } from '../services/configService';
 
 interface Migracion {
   id: string;
@@ -60,6 +62,7 @@ const ESTADO_COLORS: Record<string, { bg: string; text: string; icon: React.Comp
 const PAGE_SIZE = 12;
 
 const MigracionesDashboard = () => {
+  const { token } = useAuth();
   const [migraciones, setMigraciones] = useState<Migracion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -80,20 +83,47 @@ const MigracionesDashboard = () => {
   };
 
   useEffect(() => {
-    fetchMigraciones();
+    if (token) {
+      fetchMigraciones();
+    }
     // eslint-disable-next-line
-  }, [search, sort, page, filterStatus]);
+  }, [search, sort, page, filterStatus, token]);
 
   async function fetchMigraciones() {
+    if (!token) {
+      console.log('No token available, skipping fetch');
+      return;
+    }
+
     setLoading(true);
     try {
-      let url = `/api/collections/migraciones/records?perPage=${PAGE_SIZE}&page=${page}`;
+      let url = getApiUrl(`/collections/migraciones/records?perPage=${PAGE_SIZE}&page=${page}`);
       if (search) url += `&filter=(vdc~'${search}'||usuario~'${search}')`;
       if (filterStatus) url += `${search ? '&&' : '&filter='}(estado='${filterStatus}')`;
       if (sort.field) url += `&sort=${sort.dir === 'desc' ? '-' : ''}${sort.field}`;
       
-      const res = await fetch(url);
+      console.log('Fetching migrations from:', url);
+      console.log('Using token:', token);
+      
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Response status:', res.status);
+      console.log('Response headers:', [...res.headers.entries()]);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
+      console.log('Fetched migrations data:', data);
+      
       setMigraciones(data.items || []);
       setTotal(data.totalItems || 0);
     } catch (error) {
@@ -120,6 +150,7 @@ const MigracionesDashboard = () => {
     setShowNew(false);
     setVdcName('');
     setInputVdc('');
+    // Refrescar la lista cuando se cierre la nueva migración
     fetchMigraciones();
   };
 
@@ -137,8 +168,29 @@ const MigracionesDashboard = () => {
     console.log('View:', id);
   };
   
-  const handleDelete = (id: string) => {
-    console.log('Delete:', id);
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta migración?')) {
+      return;
+    }
+
+    try {
+      const apiUrl = getApiUrl(`/collections/migraciones/records/${id}`);
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': token
+        }
+      });
+
+      if (response.ok) {
+        // Refresh the list after deletion
+        fetchMigraciones();
+      } else {
+        console.error('Error deleting migration');
+      }
+    } catch (error) {
+      console.error('Error deleting migration:', error);
+    }
   };
   
   const handleAssessment = (id: string) => {
@@ -368,6 +420,17 @@ const MigracionesDashboard = () => {
         </div>
       </div>
 
+      {/* Debug Info - Solo en desarrollo */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-100 rounded-lg p-4 text-sm font-mono">
+          <div><strong>Debug Info:</strong></div>
+          <div>Token: {token ? '✓ Present' : '✗ Missing'}</div>
+          <div>Total migrations: {total}</div>
+          <div>Current search: "{search}"</div>
+          <div>API URL: {getApiUrl('/collections/migraciones/records')}</div>
+        </div>
+      )}
+
       {/* Migrations Grid */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
@@ -381,14 +444,16 @@ const MigracionesDashboard = () => {
               No hay migraciones
             </h3>
             <p className="text-slate-500 mb-6">
-              Comienza creando tu primera migración
+              {token ? 'Comienza creando tu primera migración' : 'Inicia sesión para ver las migraciones'}
             </p>
-            <button
-              onClick={handleNewMigration}
-              className="bg-primary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors"
-            >
-              Nueva Migración
-            </button>
+            {token && (
+              <button
+                onClick={handleNewMigration}
+                className="bg-primary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+              >
+                Nueva Migración
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">

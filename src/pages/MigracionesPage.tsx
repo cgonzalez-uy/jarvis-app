@@ -140,7 +140,12 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
         tiene_reporte: !!analysisResult?.htmlReport
       };
 
+      console.log('Datos a guardar:', migrationData);
+      console.log('Token usado:', token);
+
       const apiUrl = getApiUrl('/collections/migraciones/records');
+      console.log('URL de guardado:', apiUrl);
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -150,8 +155,12 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
         body: JSON.stringify(migrationData)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', [...response.headers.entries()]);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Error response:', errorData);
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
@@ -666,6 +675,8 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 <p className="text-slate-600">Resultados del procesamiento de archivos</p>
               </div>
             </div>
+            
+            {/* BOTONES REUBICADOS AQUÍ - Junto al header del reporte */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setReportFullscreen(!reportFullscreen)}
@@ -674,12 +685,31 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 <Maximize2 className="w-4 h-4" />
                 {reportFullscreen ? 'Minimizar' : 'Pantalla Completa'}
               </button>
+              
               <button
                 onClick={handleDownloadReport}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-secondary-700 text-white px-4 py-2 rounded-lg font-medium hover:from-secondary-600 hover:to-secondary-800 transition-all duration-300"
               >
                 <FileText className="w-4 h-4" />
                 Descargar
+              </button>
+              
+              <button
+                onClick={handleFinalizeMigration}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Finalizar y Guardar
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -714,31 +744,11 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
             </div>
           </div>
 
-          {/* Action Buttons - Solo mostrar cuando el análisis esté completo */}
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleFinalizeMigration}
-                disabled={isSaving}
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg text-lg"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Guardando migración...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-6 h-6" />
-                    Finalizar y Guardar Migración
-                  </>
-                )}
-              </button>
-            </div>
-            
-            <div className="text-center mt-4">
+          {/* Info adicional al final */}
+          <div className="p-4 border-t border-slate-200 bg-slate-50">
+            <div className="text-center">
               <p className="text-sm text-slate-600">
-                Al finalizar, la migración se guardará en el sistema y podrás verla en el listado principal
+                💡 <strong>Tip:</strong> Al finalizar, la migración se guardará en el sistema y podrás verla en el listado principal
               </p>
             </div>
           </div>
