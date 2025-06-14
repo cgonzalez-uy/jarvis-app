@@ -47,7 +47,7 @@ const MigracionesDashboard = () => {
 
   async function fetchMigraciones() {
     setLoading(true);
-    let url = `http://localhost:8090/api/collections/migraciones/records?perPage=${PAGE_SIZE}&page=${page}`;
+    let url = `/api/collections/migraciones/records?perPage=${PAGE_SIZE}&page=${page}`;
     if (search) url += `&filter=(vdc~'${search}'||usuario~'${search}')`;
     if (sort.field) url += `&sort=${sort.dir === 'desc' ? '-' : ''}${sort.field}`;
     const res = await fetch(url);
@@ -248,4 +248,4 @@ const MigracionesDashboard = () => {
   );
 };
 
-export default MigracionesDashboard; 
+export default MigracionesDashboard;

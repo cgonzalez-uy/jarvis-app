@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Regular PocketBase authentication
-      const res = await fetch('http://localhost:8090/api/collections/users/auth-with-password', {
+      const res = await fetch('/api/collections/users/auth-with-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identity: email, password }),
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           // Validate regular token against PocketBase
-          const res = await fetch('http://localhost:8090/api/collections/users/auth-refresh', {
+          const res = await fetch('/api/collections/users/auth-refresh', {
             method: 'POST',
             headers: { 'Authorization': t },
           });

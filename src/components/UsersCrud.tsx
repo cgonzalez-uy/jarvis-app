@@ -3,7 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import ConfirmModal from "./ConfirmModal";
 import Notification from "./Notification";
 
-const PB_URL = "http://localhost:8090";
+const PB_URL = "";
 
 export default function UsersCrud() {
   const { token } = useAuth();
@@ -173,4 +173,4 @@ export default function UsersCrud() {
       </table>
     </div>
   );
-} 
+}
