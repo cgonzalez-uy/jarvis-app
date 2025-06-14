@@ -16,7 +16,10 @@ import {
   FileText,
   Settings,
   FolderOpen,
-  Search
+  Search,
+  AlertTriangle,
+  Info,
+  Bug
 } from 'lucide-react';
 import { getConfig, saveConfig, resetConfig } from '../services/configService';
 
@@ -30,6 +33,7 @@ const ConfiguracionPage = () => {
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState({ pocketbase: false, n8n: false });
   const [testResults, setTestResults] = useState({ pocketbase: null as boolean | null, n8n: null as boolean | null });
+  const [testDetails, setTestDetails] = useState({ pocketbase: '', n8n: '' });
   const [showUrls, setShowUrls] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
@@ -76,37 +80,115 @@ const ConfiguracionPage = () => {
   const testConnection = async (service: 'pocketbase' | 'n8n') => {
     setTesting(prev => ({ ...prev, [service]: true }));
     setTestResults(prev => ({ ...prev, [service]: null }));
+    setTestDetails(prev => ({ ...prev, [service]: '' }));
 
     try {
       let url = '';
+      let testEndpoints: string[] = [];
+      
       if (service === 'pocketbase') {
         url = config.pocketbaseUrl ? `${config.pocketbaseUrl}/api/health` : '';
+        testEndpoints = [url];
       } else {
-        url = config.n8nWebhookUrl || '';
+        // Para n8n, probamos varios endpoints posibles
+        const baseUrl = config.n8nWebhookUrl || '';
+        if (baseUrl) {
+          testEndpoints = [
+            `${baseUrl}/healthz`,           // Endpoint de salud de n8n
+            `${baseUrl}/rest/login`,        // Endpoint de login (debería devolver 401)
+            `${baseUrl}/`,                  // URL base
+            `${baseUrl}/webhook-test/ping`, // Webhook de prueba común
+          ];
+        }
       }
 
-      if (!url) {
+      if (!testEndpoints.length || !testEndpoints[0]) {
         setTestResults(prev => ({ ...prev, [service]: false }));
+        setTestDetails(prev => ({ ...prev, [service]: `URL de ${service} no configurada` }));
         showNotification('error', `URL de ${service} no configurada`);
         return;
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'cors',
-      });
+      let success = false;
+      let lastError = '';
+      let successEndpoint = '';
 
-      const success = response.ok;
+      // Probar cada endpoint hasta encontrar uno que funcione
+      for (const endpoint of testEndpoints) {
+        try {
+          console.log(`Testing ${service} endpoint: ${endpoint}`);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+          
+          const response = await fetch(endpoint, {
+            method: 'GET',
+            mode: 'cors',
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'User-Agent': 'Jarvis-Config-Test'
+            }
+          });
+
+          clearTimeout(timeoutId);
+
+          console.log(`${service} response status:`, response.status);
+          console.log(`${service} response headers:`, [...response.headers.entries()]);
+
+          // Para n8n, consideramos exitosos varios códigos de estado
+          if (service === 'n8n') {
+            // 200, 401 (no autorizado pero servidor funcionando), 404 (endpoint no existe pero servidor funcionando)
+            if (response.status === 200 || response.status === 401 || response.status === 404) {
+              success = true;
+              successEndpoint = endpoint;
+              break;
+            }
+          } else {
+            // Para PocketBase, solo 200 es exitoso
+            if (response.ok) {
+              success = true;
+              successEndpoint = endpoint;
+              break;
+            }
+          }
+          
+          lastError = `HTTP ${response.status}: ${response.statusText}`;
+          
+        } catch (error: any) {
+          console.error(`Error testing ${endpoint}:`, error);
+          
+          if (error.name === 'AbortError') {
+            lastError = 'Timeout - El servidor no responde';
+          } else if (error.message.includes('CORS')) {
+            lastError = 'Error CORS - Verifica la configuración del servidor';
+          } else if (error.message.includes('Failed to fetch')) {
+            lastError = 'No se puede conectar - Verifica que el servidor esté corriendo';
+          } else {
+            lastError = error.message || 'Error desconocido';
+          }
+        }
+      }
+
       setTestResults(prev => ({ ...prev, [service]: success }));
       
       if (success) {
+        const detail = service === 'n8n' 
+          ? `Conectado exitosamente a: ${successEndpoint}`
+          : `Conectado exitosamente`;
+        setTestDetails(prev => ({ ...prev, [service]: detail }));
         showNotification('success', `Conexión con ${service} exitosa`);
       } else {
-        showNotification('error', `Error al conectar con ${service}`);
+        setTestDetails(prev => ({ ...prev, [service]: lastError }));
+        showNotification('error', `Error al conectar con ${service}: ${lastError}`);
       }
-    } catch (error) {
+      
+    } catch (error: any) {
+      console.error(`Error in testConnection for ${service}:`, error);
+      const errorMsg = error.message || 'Error desconocido';
       setTestResults(prev => ({ ...prev, [service]: false }));
-      showNotification('error', `Error al conectar con ${service}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      setTestDetails(prev => ({ ...prev, [service]: errorMsg }));
+      showNotification('error', `Error al conectar con ${service}: ${errorMsg}`);
     } finally {
       setTesting(prev => ({ ...prev, [service]: false }));
     }
@@ -131,6 +213,7 @@ const ConfiguracionPage = () => {
       resetConfig();
       loadConfig();
       setTestResults({ pocketbase: null, n8n: null });
+      setTestDetails({ pocketbase: '', n8n: '' });
       showNotification('info', 'Configuración restablecida');
     }
   };
@@ -193,6 +276,46 @@ tunnels:
           </div>
         </div>
       )}
+
+      {/* N8N Connection Troubleshooting */}
+      <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
+        <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center gap-2">
+          <Bug className="w-6 h-6" />
+          🔧 Solución de Problemas - Conexión n8n
+        </h2>
+        
+        <div className="space-y-4">
+          <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+            <h3 className="font-bold text-orange-800 mb-2">❗ Si la prueba de conexión n8n falla:</h3>
+            <ul className="text-orange-700 text-sm space-y-2 list-disc list-inside">
+              <li><strong>Verifica que n8n esté corriendo:</strong> Abre <code>http://localhost:5678</code> en tu navegador</li>
+              <li><strong>Verifica que ngrok esté corriendo:</strong> Ejecuta <code>ngrok start --all</code></li>
+              <li><strong>URL correcta:</strong> Usa la URL base de ngrok (ej: <code>https://abc123.ngrok.io</code>)</li>
+              <li><strong>No incluyas rutas específicas</strong> como <code>/webhook/</code> en la configuración base</li>
+            </ul>
+          </div>
+
+          <div className="bg-white border border-orange-300 rounded-lg p-4">
+            <h4 className="font-bold text-orange-800 mb-2">🔍 URLs que probamos automáticamente:</h4>
+            <div className="text-orange-700 text-sm space-y-1">
+              <div>• <code>[tu-url]/healthz</code> - Endpoint de salud de n8n</div>
+              <div>• <code>[tu-url]/rest/login</code> - Endpoint de API</div>
+              <div>• <code>[tu-url]/</code> - URL base</div>
+              <div>• <code>[tu-url]/webhook-test/ping</code> - Webhook de prueba</div>
+            </div>
+          </div>
+
+          <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+            <h4 className="font-bold text-blue-800 mb-2">✅ Pasos de verificación manual:</h4>
+            <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
+              <li>Abre tu URL de ngrok en el navegador</li>
+              <li>Deberías ver la interfaz de n8n o un mensaje de conexión</li>
+              <li>Si ves "404" o "Bad Gateway", n8n no está corriendo</li>
+              <li>Si ves "This site can't be reached", ngrok no está corriendo</li>
+            </ol>
+          </div>
+        </div>
+      </div>
 
       {/* PASO 1: DIAGNÓSTICO - Encontrar ubicación correcta */}
       <div className="bg-purple-50 border-2 border-purple-300 rounded-2xl p-6">
@@ -480,6 +603,16 @@ tunnels:
                 </div>
               )}
             </div>
+            
+            {testDetails.pocketbase && (
+              <div className={`p-3 rounded-lg text-sm ${
+                testResults.pocketbase 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {testDetails.pocketbase}
+              </div>
+            )}
           </div>
         </div>
 
@@ -553,6 +686,16 @@ tunnels:
                 </div>
               )}
             </div>
+            
+            {testDetails.n8n && (
+              <div className={`p-3 rounded-lg text-sm ${
+                testResults.n8n 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {testDetails.n8n}
+              </div>
+            )}
           </div>
         </div>
       </div>
