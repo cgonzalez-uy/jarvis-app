@@ -14,7 +14,9 @@ import {
   Trash2,
   Terminal,
   FileText,
-  Settings
+  Settings,
+  FolderOpen,
+  Search
 } from 'lucide-react';
 import { getConfig, saveConfig, resetConfig } from '../services/configService';
 
@@ -192,38 +194,34 @@ tunnels:
         </div>
       )}
 
-      {/* URGENTE - Problema YAML detectado */}
-      <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-red-800 mb-4 flex items-center gap-2">
-          <AlertCircle className="w-8 h-8" />
-          🚨 PROBLEMA YAML - SOLUCIÓN INMEDIATA
+      {/* PASO 1: DIAGNÓSTICO - Encontrar ubicación correcta */}
+      <div className="bg-purple-50 border-2 border-purple-300 rounded-2xl p-6">
+        <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+          <Search className="w-8 h-8" />
+          🔍 PASO 1: DIAGNÓSTICO - Encontrar ubicación correcta de ngrok
         </h2>
         
         <div className="space-y-6">
-          <div className="bg-red-100 border border-red-300 rounded-lg p-4">
-            <h3 className="font-bold text-red-800 mb-2">🔍 Diagnóstico:</h3>
-            <p className="text-red-700 text-sm mb-2">
-              El archivo <code>ngrok.yml</code> tiene problemas de formato YAML (indentación o caracteres invisibles)
-            </p>
-            <p className="text-red-700 text-sm">
-              ngrok no puede leer los túneles definidos por errores de formato
-            </p>
+          <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
+            <h3 className="font-bold text-purple-800 mb-2">🎯 Tienes razón - La carpeta puede estar en ubicaciones diferentes:</h3>
+            <ul className="text-purple-700 text-sm list-disc list-inside space-y-1">
+              <li><strong>Ejecutable descargado:</strong> <code>C:\Users\[usuario]\.ngrok2\</code></li>
+              <li><strong>Instalación con Chocolatey/Scoop:</strong> Ubicación del sistema</li>
+              <li><strong>Ubicación alternativa:</strong> <code>%APPDATA%\ngrok\</code></li>
+            </ul>
           </div>
 
-          <div className="bg-green-100 border border-green-300 rounded-lg p-4">
-            <h3 className="font-bold text-green-800 mb-4">✅ SOLUCIÓN EXACTA - Sigue estos 3 pasos:</h3>
+          <div className="bg-white border border-purple-300 rounded-lg p-4">
+            <h4 className="font-bold text-purple-800 mb-4">🚀 EJECUTA ESTOS COMANDOS PARA ENCONTRAR LA UBICACIÓN CORRECTA:</h4>
             
             <div className="space-y-4">
-              {/* Paso 1 */}
-              <div className="bg-white border border-green-300 rounded-lg p-4">
-                <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                  <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
-                  Borra el archivo actual (tiene formato incorrecto)
-                </h4>
+              {/* Verificar instalación de ngrok */}
+              <div>
+                <h5 className="font-semibold text-purple-700 mb-2">1. Verificar instalación y ubicación de ngrok:</h5>
                 <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-                  <span>del "C:\Users\Christian González\.ngrok2\ngrok.yml"</span>
+                  <span>where ngrok</span>
                   <button 
-                    onClick={() => copyToClipboard('del "C:\\Users\\Christian González\\.ngrok2\\ngrok.yml"')}
+                    onClick={() => copyToClipboard('where ngrok')}
                     className="p-1 hover:bg-gray-800 rounded text-white"
                   >
                     <Copy className="w-4 h-4" />
@@ -231,16 +229,13 @@ tunnels:
                 </div>
               </div>
 
-              {/* Paso 2 */}
-              <div className="bg-white border border-green-300 rounded-lg p-4">
-                <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                  <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
-                  Crea nuevo archivo con formato correcto
-                </h4>
+              {/* Ver configuración actual */}
+              <div>
+                <h5 className="font-semibold text-purple-700 mb-2">2. Ver dónde busca ngrok su configuración:</h5>
                 <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-                  <span>notepad "C:\Users\Christian González\.ngrok2\ngrok.yml"</span>
+                  <span>ngrok config check</span>
                   <button 
-                    onClick={() => copyToClipboard('notepad "C:\\Users\\Christian González\\.ngrok2\\ngrok.yml"')}
+                    onClick={() => copyToClipboard('ngrok config check')}
                     className="p-1 hover:bg-gray-800 rounded text-white"
                   >
                     <Copy className="w-4 h-4" />
@@ -248,102 +243,167 @@ tunnels:
                 </div>
               </div>
 
-              {/* Paso 3 */}
-              <div className="bg-white border border-green-300 rounded-lg p-4">
-                <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                  <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
-                  Pega EXACTAMENTE este contenido (con tu token actual)
-                </h4>
-                <div className="bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-sm relative">
-                  <pre className="whitespace-pre-wrap">{ngrokConfigContent}</pre>
+              {/* Buscar archivos de configuración existentes */}
+              <div>
+                <h5 className="font-semibold text-purple-700 mb-2">3. Buscar archivos de configuración existentes:</h5>
+                <div className="space-y-2">
+                  <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>dir "%USERPROFILE%\.ngrok2" /A</span>
+                    <button 
+                      onClick={() => copyToClipboard('dir "%USERPROFILE%\\.ngrok2" /A')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>dir "%APPDATA%\ngrok" /A</span>
+                    <button 
+                      onClick={() => copyToClipboard('dir "%APPDATA%\\ngrok" /A')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buscar todos los archivos ngrok.yml */}
+              <div>
+                <h5 className="font-semibold text-purple-700 mb-2">4. Buscar TODOS los archivos ngrok.yml en tu sistema:</h5>
+                <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                  <span>dir C:\ /S /B ngrok.yml 2>nul</span>
                   <button 
-                    onClick={() => copyToClipboard(ngrokConfigContent)}
-                    className="absolute top-2 right-2 p-2 hover:bg-gray-700 rounded text-white bg-gray-800"
+                    onClick={() => copyToClipboard('dir C:\\ /S /B ngrok.yml 2>nul')}
+                    className="p-1 hover:bg-gray-800 rounded text-white"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-green-700 text-xs mt-2">
-                  ⚠️ <strong>IMPORTANTE:</strong> La indentación debe ser EXACTA (2 espacios, no tabs)
-                </p>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
-            <h4 className="font-bold text-blue-800 mb-2">🚀 Ahora ejecuta:</h4>
-            <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-              <span>ngrok start --all</span>
-              <button 
-                onClick={() => copyToClipboard('ngrok start --all')}
-                className="p-1 hover:bg-gray-800 rounded text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
             </div>
           </div>
 
           <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
-            <h4 className="font-bold text-yellow-800 mb-2">📋 Si todo está bien, verás:</h4>
-            <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-xs">
-              ngrok                                                                           (Ctrl+C to quit)<br/>
-              <br/>
-              Session Status                online<br/>
-              Account                       tu_email@example.com (Plan: Free)<br/>
-              Version                       3.x.x<br/>
-              <br/>
-              Forwarding                    https://abc123.ngrok.io → http://localhost:8090<br/>
-              Forwarding                    https://xyz789.ngrok.io → http://localhost:5678<br/>
+            <h4 className="font-bold text-yellow-800 mb-2">📋 ¿Qué significan los resultados?</h4>
+            <ul className="text-yellow-700 text-sm space-y-2">
+              <li><strong>where ngrok</strong> → Te mostrará dónde está instalado el ejecutable</li>
+              <li><strong>ngrok config check</strong> → Te dirá exactamente dónde busca el archivo de configuración</li>
+              <li><strong>dir commands</strong> → Buscarán carpetas y archivos existentes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* PASO 2: UBICACIONES ALTERNATIVAS */}
+      <div className="bg-blue-50 border-2 border-blue-300 rounded-2xl p-6">
+        <h2 className="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+          <FolderOpen className="w-8 h-8" />
+          📁 PASO 2: UBICACIONES ALTERNATIVAS PARA CREAR LA CONFIGURACIÓN
+        </h2>
+        
+        <div className="space-y-4">
+          <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+            <h4 className="font-bold text-blue-800 mb-3">🎯 Prueba estas ubicaciones (en orden de prioridad):</h4>
+            
+            <div className="space-y-4">
+              {/* Opción 1: APPDATA */}
+              <div className="bg-white border border-blue-300 rounded-lg p-4">
+                <h5 className="font-semibold text-blue-700 mb-2">OPCIÓN 1: Carpeta APPDATA (Recomendada)</h5>
+                <div className="space-y-2">
+                  <div className="bg-black text-blue-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>mkdir "%APPDATA%\ngrok"</span>
+                    <button 
+                      onClick={() => copyToClipboard('mkdir "%APPDATA%\\ngrok"')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="bg-black text-blue-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>notepad "%APPDATA%\ngrok\ngrok.yml"</span>
+                    <button 
+                      onClick={() => copyToClipboard('notepad "%APPDATA%\\ngrok\\ngrok.yml"')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opción 2: Home directory */}
+              <div className="bg-white border border-blue-300 rounded-lg p-4">
+                <h5 className="font-semibold text-blue-700 mb-2">OPCIÓN 2: Directorio Home (La que ya intentaste)</h5>
+                <div className="space-y-2">
+                  <div className="bg-black text-blue-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>mkdir "%USERPROFILE%\.ngrok2"</span>
+                    <button 
+                      onClick={() => copyToClipboard('mkdir "%USERPROFILE%\\.ngrok2"')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="bg-black text-blue-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                    <span>notepad "%USERPROFILE%\.ngrok2\ngrok.yml"</span>
+                    <button 
+                      onClick={() => copyToClipboard('notepad "%USERPROFILE%\\.ngrok2\\ngrok.yml"')}
+                      className="p-1 hover:bg-gray-800 rounded text-white"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opción 3: Especificar ubicación manualmente */}
+              <div className="bg-white border border-blue-300 rounded-lg p-4">
+                <h5 className="font-semibold text-blue-700 mb-2">OPCIÓN 3: Especificar ubicación manualmente</h5>
+                <p className="text-blue-600 text-sm mb-2">Si ngrok no encuentra el archivo, puedes especificar la ruta manualmente:</p>
+                <div className="bg-black text-blue-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                  <span>ngrok start --config="C:\ruta\completa\a\ngrok.yml" --all</span>
+                  <button 
+                    onClick={() => copyToClipboard('ngrok start --config="C:\\ruta\\completa\\a\\ngrok.yml" --all')}
+                    className="p-1 hover:bg-gray-800 rounded text-white"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Troubleshooting adicional */}
-      <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
-        <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center gap-2">
-          <Settings className="w-6 h-6" />
-          🔧 Si aún hay problemas - Comandos de diagnóstico
+      {/* PASO 3: CONTENIDO DEL ARCHIVO */}
+      <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-6">
+        <h2 className="text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+          <FileText className="w-8 h-8" />
+          📝 PASO 3: CONTENIDO DEL ARCHIVO (Una vez que determines la ubicación)
         </h2>
         
-        <div className="space-y-4">
-          <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
-            <h4 className="font-bold text-orange-800 mb-2">Verificar contenido del archivo:</h4>
-            <div className="bg-black text-orange-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-              <span>type "C:\Users\Christian González\.ngrok2\ngrok.yml"</span>
-              <button 
-                onClick={() => copyToClipboard('type "C:\\Users\\Christian González\\.ngrok2\\ngrok.yml"')}
-                className="p-1 hover:bg-gray-800 rounded text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
+        <div className="bg-white border border-green-300 rounded-lg p-4">
+          <h4 className="font-bold text-green-800 mb-2">Pega EXACTAMENTE este contenido:</h4>
+          <div className="bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-sm relative">
+            <pre className="whitespace-pre-wrap">{ngrokConfigContent}</pre>
+            <button 
+              onClick={() => copyToClipboard(ngrokConfigContent)}
+              className="absolute top-2 right-2 p-2 hover:bg-gray-700 rounded text-white bg-gray-800"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
           </div>
-
-          <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
-            <h4 className="font-bold text-orange-800 mb-2">Verificar configuración de ngrok:</h4>
-            <div className="bg-black text-orange-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-              <span>ngrok config check</span>
-              <button 
-                onClick={() => copyToClipboard('ngrok config check')}
-                className="p-1 hover:bg-gray-800 rounded text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
-            <h4 className="font-bold text-orange-800 mb-2">Ver ayuda de ngrok:</h4>
-            <div className="bg-black text-orange-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-              <span>ngrok start --help</span>
-              <button 
-                onClick={() => copyToClipboard('ngrok start --help')}
-                className="p-1 hover:bg-gray-800 rounded text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+            <p className="text-green-700 text-sm">
+              <strong>⚠️ CRÍTICO:</strong>
+            </p>
+            <ul className="text-green-700 text-xs mt-1 list-disc list-inside">
+              <li>Usa EXACTAMENTE 2 espacios para la indentación (no tabs)</li>
+              <li>No agregues espacios extra al final de las líneas</li>
+              <li>Mantén las comillas dobles como están</li>
+              <li>Guarda el archivo como <code>ngrok.yml</code> (no .txt)</li>
+            </ul>
           </div>
         </div>
       </div>
