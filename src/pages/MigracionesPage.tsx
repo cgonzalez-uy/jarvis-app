@@ -18,8 +18,7 @@ import {
   PlayCircle,
   TrendingUp,
   Sparkles,
-  Maximize2,
-  ExternalLink
+  Maximize2
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { validateV2TReport, validateEdgeGatewayReport, validateVDCReport } from '../services/fileValidation';
@@ -235,21 +234,13 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'reporte-migracion.html';
+    // Usar nombre dinámico con el VDC
+    const sanitizedVdcName = vdcName.replace(/[^a-zA-Z0-9-_]/g, '-');
+    a.download = `reporte-assessment-${sanitizedVdcName}.html`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-  };
-
-  const openReportInNewTab = () => {
-    if (!analysisResult?.htmlReport) return;
-    const htmlContent = extractHtml(analysisResult.htmlReport);
-    const newWindow = window.open();
-    if (newWindow) {
-      newWindow.document.write(htmlContent);
-      newWindow.document.close();
-    }
   };
 
   const renderValidationDetails = (validation: FileUpload['validation']) => {
@@ -604,13 +595,6 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={openReportInNewTab}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Abrir en Nueva Pestaña
-              </button>
               <button
                 onClick={() => setReportFullscreen(!reportFullscreen)}
                 className="inline-flex items-center gap-2 bg-slate-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-700 transition-colors"
