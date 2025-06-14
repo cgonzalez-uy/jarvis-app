@@ -1,4 +1,4 @@
-import { Bell, Search, Shield, Sparkles, Menu, X } from 'lucide-react';
+import { Bell, Shield, Sparkles, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 
@@ -28,19 +28,6 @@ const Header = () => {
                 Jarvis
               </h1>
               <p className="text-xs text-slate-400 font-medium">Migration Platform</p>
-            </div>
-          </div>
-          
-          {/* Search Bar */}
-          <div className="relative group hidden lg:block">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-accent-purple/20 rounded-2xl blur-sm group-hover:blur-none transition-all duration-300"></div>
-            <div className="relative">
-              <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-hover:text-primary-300 transition-colors" />
-              <input
-                type="text"
-                placeholder="Buscar en la plataforma..."
-                className="pl-12 pr-6 py-3 w-80 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 font-medium transition-all duration-300 hover:bg-white/15"
-              />
             </div>
           </div>
         </div>
@@ -110,20 +97,6 @@ const Header = () => {
           </button>
         </div>
       </div>
-      
-      {/* Mobile Search Bar */}
-      {isMenuOpen && (
-        <div className="md:hidden px-8 py-4 bg-slate-900/95 backdrop-blur-xl border-t border-white/10">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="w-full pl-12 pr-6 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50"
-            />
-          </div>
-        </div>
-      )}
     </header>
   );
 };

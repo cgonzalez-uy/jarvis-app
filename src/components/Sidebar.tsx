@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { ServerCog, Settings, Link2, Users, Shield, ChevronRight, Zap, Activity } from 'lucide-react';
+import { ServerCog, Settings, Link2, Users, Shield, ChevronRight, Zap } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const navigation = [
@@ -109,30 +109,6 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
-
-        {/* Quick Stats */}
-        <div className="px-6 py-4">
-          <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
-              <Activity className="w-4 h-4 mr-2 text-primary-400" />
-              Estado del Sistema
-            </h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Migraciones Activas</span>
-                <span className="text-xs font-semibold text-emerald-400">12</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Webhooks</span>
-                <span className="text-xs font-semibold text-primary-400">5</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Usuarios</span>
-                <span className="text-xs font-semibold text-secondary-400">28</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* User Profile Section */}
         <div className="p-6 border-t border-white/10">
