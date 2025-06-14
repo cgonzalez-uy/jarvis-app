@@ -167,6 +167,7 @@ const MigracionesDashboard = () => {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState('');
   const [assessmentVdc, setAssessmentVdc] = useState('');
+  const [assessmentMigrationId, setAssessmentMigrationId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'fecha_creacion', dir: 'desc' });
   const [page, setPage] = useState(1);
@@ -259,6 +260,7 @@ const MigracionesDashboard = () => {
   const handleCloseAssessment = () => {
     setShowAssessment(false);
     setAssessmentVdc('');
+    setAssessmentMigrationId(null);
     fetchMigraciones();
   };
 
@@ -267,11 +269,12 @@ const MigracionesDashboard = () => {
     setComingSoonFeature('');
   };
 
-  // Manejar assessment (verificar si existe y actualizar o crear nuevo)
-  const handleAssessment = async (vdcName: string) => {
+  // Buscar migración existente por VDC
+  const findExistingMigration = async (vdcName: string): Promise<Migracion | null> => {
     try {
-      // Buscar si ya existe una migración para este VDC
-      const searchUrl = getApiUrl(`/collections/migraciones/records?filter=(vdc='${vdcName}')`);
+      const searchUrl = getApiUrl(`/collections/migraciones/records?filter=(vdc='${vdcName}')&perPage=1`);
+      console.log('Searching for existing migration:', searchUrl);
+      
       const searchResponse = await fetch(searchUrl, {
         headers: {
           'Authorization': token,
@@ -281,25 +284,46 @@ const MigracionesDashboard = () => {
 
       if (searchResponse.ok) {
         const searchData = await searchResponse.json();
+        console.log('Search result:', searchData);
         
         if (searchData.items && searchData.items.length > 0) {
-          // Ya existe, dirigir a assessment para actualizar
-          console.log('Migration exists for VDC:', vdcName, 'Redirecting to assessment...');
-          setAssessmentVdc(vdcName);
-          setShowAssessment(true);
-          return;
+          return searchData.items[0];
         }
       }
+      
+      return null;
+    } catch (error) {
+      console.error('Error searching for existing migration:', error);
+      return null;
+    }
+  };
 
-      // No existe, crear nueva migración
-      console.log('No existing migration found for VDC:', vdcName, 'Creating new...');
-      setVdcName(vdcName);
-      setShowNew(true);
+  // Manejar assessment (verificar si existe y actualizar o crear nuevo)
+  const handleAssessment = async (vdcName: string) => {
+    console.log('Starting assessment for VDC:', vdcName);
+    
+    try {
+      const existingMigration = await findExistingMigration(vdcName);
+      
+      if (existingMigration) {
+        // Ya existe, dirigir a assessment para actualizar
+        console.log('Existing migration found:', existingMigration.id, 'Redirecting to update assessment...');
+        setAssessmentVdc(vdcName);
+        setAssessmentMigrationId(existingMigration.id);
+        setShowAssessment(true);
+      } else {
+        // No existe, crear nueva migración
+        console.log('No existing migration found for VDC:', vdcName, 'Creating new...');
+        setVdcName(vdcName);
+        setAssessmentMigrationId(null);
+        setShowNew(true);
+      }
       
     } catch (error) {
       console.error('Error checking existing migration:', error);
       // En caso de error, asumir que no existe y crear nueva
       setVdcName(vdcName);
+      setAssessmentMigrationId(null);
       setShowNew(true);
     }
   };
@@ -443,6 +467,7 @@ const MigracionesDashboard = () => {
       <div className="h-full">
         <MigracionesPage 
           vdcName={vdcName || assessmentVdc} 
+          existingMigrationId={assessmentMigrationId}
           onClose={showNew ? handleCloseNew : handleCloseAssessment} 
         />
       </div>

@@ -43,10 +43,15 @@ interface FileUpload {
 
 interface MigracionesPageProps {
   vdcName?: string;
+  existingMigrationId?: string | null;
   onClose?: () => void;
 }
 
-const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcName, onClose }) => {
+const MigracionesPage: React.FC<MigracionesPageProps> = ({ 
+  vdcName: initialVdcName, 
+  existingMigrationId, 
+  onClose 
+}) => {
   const [files, setFiles] = useState<FileUpload[]>([
     {
       name: 'Reporte de Evaluación V2T',
@@ -142,12 +147,28 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
 
       console.log('Datos a guardar:', migrationData);
       console.log('Token usado:', token);
+      console.log('Existing migration ID:', existingMigrationId);
 
-      const apiUrl = getApiUrl('/collections/migraciones/records');
+      let apiUrl: string;
+      let method: string;
+      
+      if (existingMigrationId) {
+        // Actualizar migración existente
+        apiUrl = getApiUrl(`/collections/migraciones/records/${existingMigrationId}`);
+        method = 'PATCH';
+        console.log('Updating existing migration:', existingMigrationId);
+      } else {
+        // Crear nueva migración
+        apiUrl = getApiUrl('/collections/migraciones/records');
+        method = 'POST';
+        console.log('Creating new migration');
+      }
+      
       console.log('URL de guardado:', apiUrl);
+      console.log('Method:', method);
       
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token
@@ -167,12 +188,14 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
       const savedMigration = await response.json();
       console.log('Migración guardada exitosamente:', savedMigration);
       
-      showNotification('success', `Migración "${vdcName}" guardada exitosamente`);
+      const actionText = existingMigrationId ? 'actualizada' : 'guardada';
+      showNotification('success', `Migración "${vdcName}" ${actionText} exitosamente`);
       return true;
       
     } catch (error) {
       console.error('Error al guardar la migración:', error);
-      showNotification('error', `Error al guardar la migración: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      const actionText = existingMigrationId ? 'actualizar' : 'guardar';
+      showNotification('error', `Error al ${actionText} la migración: ${error instanceof Error ? error.message : 'Error desconocido'}`);
       return false;
     } finally {
       setIsSaving(false);
@@ -381,8 +404,23 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
             {/* File Upload Cards */}
             <div className="space-y-6">
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Carga de Archivos</h2>
-                <p className="text-slate-600">Arrastra y suelta los archivos requeridos o selecciónalos manualmente</p>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                  {existingMigrationId ? 'Actualizar Assessment' : 'Carga de Archivos'}
+                </h2>
+                <p className="text-slate-600">
+                  {existingMigrationId 
+                    ? 'Actualiza los archivos para el assessment existente'
+                    : 'Arrastra y suelta los archivos requeridos o selecciónalos manualmente'
+                  }
+                </p>
+                {existingMigrationId && (
+                  <div className="mt-2 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm text-blue-700 font-medium">
+                      Modo actualización - Los datos existentes serán actualizados
+                    </span>
+                  </div>
+                )}
               </div>
 
               {files.map((fileUpload, index) => {
@@ -543,12 +581,16 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
               
               <h2 className="text-3xl font-bold text-slate-800 mb-3">
                 {allValid
-                  ? '¡Archivos Listos para Análisis!'
+                  ? existingMigrationId 
+                    ? '¡Archivos Listos para Actualizar Análisis!'
+                    : '¡Archivos Listos para Análisis!'
                   : 'Errores Detectados'}
               </h2>
               <p className="text-slate-600 text-lg">
                 {allValid
-                  ? 'Todos los archivos han sido validados correctamente y están listos para ser procesados.'
+                  ? existingMigrationId
+                    ? 'Todos los archivos han sido validados correctamente y están listos para actualizar el análisis existente.'
+                    : 'Todos los archivos han sido validados correctamente y están listos para ser procesados.'
                   : 'Se encontraron errores que deben ser corregidos antes de continuar.'}
               </p>
             </div>
@@ -560,12 +602,31 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                     <Link2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-800">Análisis de Migración</h3>
+                    <h3 className="text-xl font-semibold text-slate-800">
+                      {existingMigrationId ? 'Actualizar Análisis de Migración' : 'Análisis de Migración'}
+                    </h3>
                     <p className="text-slate-600">Procesamiento automático con Jarvis IA</p>
                   </div>
                 </div>
                 
                 <div className="space-y-6">
+                  {existingMigrationId && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <AlertCircle className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-800 mb-1">Modo Actualización</h4>
+                          <p className="text-xs text-blue-700">
+                            Estás actualizando el assessment para <strong>{vdcName}</strong>. 
+                            Los nuevos resultados reemplazarán la información anterior.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Webhook Selection */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -628,7 +689,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                       ) : (
                         <>
                           <PlayCircle className="w-6 h-6" />
-                          Iniciar Análisis
+                          {existingMigrationId ? 'Actualizar Análisis' : 'Iniciar Análisis'}
                         </>
                       )}
                     </button>
@@ -671,8 +732,15 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-800">Reporte de Análisis</h3>
-                <p className="text-slate-600">Resultados del procesamiento de archivos</p>
+                <h3 className="text-xl font-semibold text-slate-800">
+                  {existingMigrationId ? 'Reporte Actualizado' : 'Reporte de Análisis'}
+                </h3>
+                <p className="text-slate-600">
+                  {existingMigrationId 
+                    ? 'Resultados actualizados del procesamiento de archivos'
+                    : 'Resultados del procesamiento de archivos'
+                  }
+                </p>
               </div>
             </div>
             
@@ -707,7 +775,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Finalizar y Guardar
+                    {existingMigrationId ? 'Finalizar Actualización' : 'Finalizar y Guardar'}
                   </>
                 )}
               </button>
@@ -748,7 +816,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
           <div className="p-4 border-t border-slate-200 bg-slate-50">
             <div className="text-center">
               <p className="text-sm text-slate-600">
-                💡 <strong>Tip:</strong> Al finalizar, la migración se guardará en el sistema y podrás verla en el listado principal
+                💡 <strong>Tip:</strong> Al finalizar, {existingMigrationId ? 'la migración se actualizará' : 'la migración se guardará'} en el sistema y podrás verla en el listado principal
               </p>
             </div>
           </div>
@@ -854,9 +922,17 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">
-                    Nueva Migración: {vdcName || 'Sin nombre'}
+                    {existingMigrationId 
+                      ? `Actualizar Assessment: ${vdcName || 'Sin nombre'}`
+                      : `Nueva Migración: ${vdcName || 'Sin nombre'}`
+                    }
                   </h1>
-                  <p className="text-slate-300">Configura tu migración VMware Cloud Foundation</p>
+                  <p className="text-slate-300">
+                    {existingMigrationId 
+                      ? 'Actualiza tu assessment VMware Cloud Foundation'
+                      : 'Configura tu migración VMware Cloud Foundation'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
@@ -869,9 +945,9 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
         <div className="mb-12">
           <div className="flex items-center justify-between">
             {[
-              { step: 1, title: 'Carga de Archivos', icon: Upload },
+              { step: 1, title: existingMigrationId ? 'Actualizar Archivos' : 'Carga de Archivos', icon: Upload },
               { step: 2, title: 'Validación', icon: Shield },
-              { step: 3, title: 'Análisis', icon: Activity }
+              { step: 3, title: existingMigrationId ? 'Actualizar Análisis' : 'Análisis', icon: Activity }
             ].map(({ step, title, icon: Icon }) => (
               <div key={step} className="flex flex-col items-center flex-1">
                 <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
