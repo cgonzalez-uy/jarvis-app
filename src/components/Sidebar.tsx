@@ -30,7 +30,7 @@ const Sidebar = () => {
   const avatar = user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
   
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col">
       <div className="flex-1 flex flex-col">
         <nav className="flex-1 px-4 py-6 space-y-2">
           {navigation.map((item) => (
@@ -38,10 +38,10 @@ const Sidebar = () => {
               key={item.name}
               to={item.href}
               className={({ isActive }) =>
-                `group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                `group flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
                   isActive
                     ? 'bg-primary/10 text-primary dark:bg-primary/20 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:shadow-sm'
                 }`
               }
             >
@@ -51,11 +51,11 @@ const Sidebar = () => {
           ))}
         </nav>
       </div>
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className={`flex items-center rounded-lg p-3 ${
           isSuperAdmin 
             ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' 
-            : 'bg-gray-50 dark:bg-gray-800/50'
+            : 'bg-slate-50 dark:bg-slate-800/50'
         }`}>
           <div className="flex-shrink-0">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -66,20 +66,20 @@ const Sidebar = () => {
               {isSuperAdmin ? (
                 <Shield className="w-4 h-4 text-white" />
               ) : (
-                <span className="text-sm font-medium text-primary">{avatar}</span>
+                <span className="text-sm font-semibold text-primary">{avatar}</span>
               )}
             </div>
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               {user?.username || user?.email}
             </p>
             <p className={`text-xs ${
               isSuperAdmin 
                 ? 'text-purple-600 dark:text-purple-400 font-medium' 
-                : 'text-gray-500 dark:text-gray-400'
+                : 'text-slate-500 dark:text-slate-400'
             }`}>
-              {isSuperAdmin ? 'Super Admin' : 'Usuario'}
+              {isSuperAdmin ? 'Super Administrador' : 'Usuario'}
             </p>
           </div>
         </div>
