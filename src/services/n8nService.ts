@@ -24,20 +24,27 @@ export const sendFilesToAnalysis = async (files: File[], webhookPath: string): P
       formData.append(`file${index + 1}`, file);
     });
 
-    console.log('Sending files to:', webhookUrl);
+    console.log('Sending files to n8n webhook:', webhookUrl);
+    console.log('Files being sent:', files.map(f => f.name));
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
       body: formData
     });
 
+    console.log('n8n response status:', response.status);
+    console.log('n8n response headers:', [...response.headers.entries()]);
+
     if (!response.ok) {
       throw new Error(`Error al enviar archivos a n8n: ${response.status} ${response.statusText}`);
     }
 
     const contentType = response.headers.get('content-type');
+    console.log('n8n response content-type:', contentType);
+    
     if (contentType && contentType.includes('text/html')) {
       const htmlContent = await response.text();
+      console.log('Received HTML response from n8n');
       return {
         success: true,
         message: 'Análisis completado correctamente',
@@ -45,6 +52,8 @@ export const sendFilesToAnalysis = async (files: File[], webhookPath: string): P
       };
     } else {
       const data = await response.json();
+      console.log('Received JSON response from n8n:', data);
+      
       if (data && typeof data.html === 'string') {
         return {
           success: true,

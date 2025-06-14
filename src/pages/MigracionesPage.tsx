@@ -83,32 +83,10 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
   } | null>(null);
 
   const { token } = useAuth();
-  const [webhooks, setWebhooks] = useState<any[]>([]);
-  const [selectedWebhook, setSelectedWebhook] = useState<string>("");
-  const [webhookError, setWebhookError] = useState("");
-
   const [vdcName, setVdcName] = useState(initialVdcName || '');
 
-  useEffect(() => {
-    if (activeStep === 3 && token) {
-      fetchWebhooks();
-    }
-    // eslint-disable-next-line
-  }, [activeStep, token]);
-
-  async function fetchWebhooks() {
-    try {
-      const apiUrl = getApiUrl('/collections/webhooks/records?perPage=50');
-      const res = await fetch(apiUrl, {
-        headers: { Authorization: token },
-      });
-      const data = await res.json();
-      setWebhooks(data.items || []);
-    } catch (error) {
-      console.error('Error fetching webhooks:', error);
-      setWebhooks([]);
-    }
-  }
+  // Webhook específico para análisis de migraciones (hardcodeado como debe ser)
+  const MIGRATION_ANALYSIS_WEBHOOK = '/webhook-test/asistente-migraciones';
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
@@ -199,27 +177,19 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
   };
 
   const handleAnalysis = async () => {
-    setWebhookError("");
-    if (!selectedWebhook) {
-      setWebhookError("Debes seleccionar un webhook antes de iniciar el análisis.");
-      return;
-    }
     setIsAnalyzing(true);
     const validFiles = files.filter(f => f.file && f.validation?.isValid).map(f => f.file!);
-    const webhook = webhooks.find(w => w.id === selectedWebhook);
-    const webhookPath = webhook?.url || webhook?.path || "";
     
     try {
-      const result = await sendFilesToAnalysis(validFiles, webhookPath);
+      console.log('Sending files to migration analysis webhook:', MIGRATION_ANALYSIS_WEBHOOK);
+      const result = await sendFilesToAnalysis(validFiles, MIGRATION_ANALYSIS_WEBHOOK);
       if (result.success) {
         setAnalysisResult(result);
       } else {
         console.error('Error en el análisis:', result.message);
-        setWebhookError(result.message);
       }
     } catch (error) {
       console.error('Error al enviar archivos:', error);
-      setWebhookError('Error al enviar archivos para análisis');
     } finally {
       setIsAnalyzing(false);
     }
@@ -475,39 +445,34 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                     <Link2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-800">Configuración de Webhook</h3>
-                    <p className="text-slate-600">Selecciona el webhook para procesar los archivos</p>
+                    <h3 className="text-xl font-semibold text-slate-800">Análisis de Migración</h3>
+                    <p className="text-slate-600">Procesamiento automático con Jarvis IA</p>
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      Webhook de n8n
-                    </label>
-                    <select
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors bg-slate-50/50 hover:bg-white"
-                      value={selectedWebhook}
-                      onChange={e => setSelectedWebhook(e.target.value)}
-                    >
-                      <option value="">-- Selecciona un webhook --</option>
-                      {webhooks.map(w => (
-                        <option key={w.id} value={w.id}>
-                          {w.name} ({w.path || w.url})
-                        </option>
-                      ))}
-                    </select>
-                    {webhookError && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-red-700 text-sm font-medium">{webhookError}</p>
+                <div className="space-y-6">
+                  {/* Info sobre el webhook */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Link2 className="w-4 h-4 text-blue-600" />
                       </div>
-                    )}
+                      <div>
+                        <h4 className="text-sm font-semibold text-blue-800 mb-1">Endpoint de Análisis</h4>
+                        <p className="text-xs text-blue-700">
+                          Los archivos serán enviados a: <code className="bg-blue-100 px-1 rounded">{MIGRATION_ANALYSIS_WEBHOOK}</code>
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Este webhook debe estar configurado en tu instancia de n8n para procesar las migraciones VCF.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex justify-center pt-6">
+                  <div className="flex justify-center pt-4">
                     <button
                       onClick={handleAnalysis}
-                      disabled={isAnalyzing || !selectedWebhook}
+                      disabled={isAnalyzing}
                       className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary text-lg"
                     >
                       {isAnalyzing ? (
