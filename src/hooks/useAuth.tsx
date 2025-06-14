@@ -6,6 +6,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,9 +15,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   async function login(email: string, password: string) {
     try {
+      // Check for superadmin credentials first
+      if (email === 'infraagesic@hg.com.uy' && password === 'Agesicvcf23!') {
+        const superAdminUser = {
+          id: 'superadmin',
+          email: 'infraagesic@hg.com.uy',
+          username: 'Super Admin',
+          name: 'Super Administrator',
+          verified: true,
+          role: 'superadmin'
+        };
+        
+        setUser(superAdminUser);
+        setToken('superadmin-token');
+        setIsSuperAdmin(true);
+        localStorage.setItem('pb_token', 'superadmin-token');
+        localStorage.setItem('pb_user', JSON.stringify(superAdminUser));
+        localStorage.setItem('is_superadmin', 'true');
+        return true;
+      }
+
+      // Regular PocketBase authentication
       const res = await fetch('http://localhost:8090/api/collections/users/auth-with-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,8 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok && data.token) {
         setUser(data.record);
         setToken(data.token);
+        setIsSuperAdmin(false);
         localStorage.setItem('pb_token', data.token);
         localStorage.setItem('pb_user', JSON.stringify(data.record));
+        localStorage.removeItem('is_superadmin');
         return true;
       }
       return false;
@@ -39,33 +64,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   function logout() {
     setUser(null);
     setToken("");
+    setIsSuperAdmin(false);
     localStorage.removeItem('pb_token');
     localStorage.removeItem('pb_user');
+    localStorage.removeItem('is_superadmin');
     window.location.href = '/login';
   }
 
-  // Validar token al cargar la app
+  // Validate token on app load
   React.useEffect(() => {
     async function validateSession() {
       const t = localStorage.getItem('pb_token');
       const u = localStorage.getItem('pb_user');
+      const superAdmin = localStorage.getItem('is_superadmin');
+      
       if (t && u) {
-        // Validar token contra PocketBase
-        const res = await fetch('http://localhost:8090/api/collections/users/auth-refresh', {
-          method: 'POST',
-          headers: { 'Authorization': t },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setToken(data.token);
-          setUser(data.record);
-          localStorage.setItem('pb_token', data.token);
-          localStorage.setItem('pb_user', JSON.stringify(data.record));
-        } else {
+        try {
+          const userData = JSON.parse(u);
+          
+          // Check if it's superadmin
+          if (superAdmin === 'true' && t === 'superadmin-token') {
+            setToken(t);
+            setUser(userData);
+            setIsSuperAdmin(true);
+            setLoading(false);
+            return;
+          }
+          
+          // Validate regular token against PocketBase
+          const res = await fetch('http://localhost:8090/api/collections/users/auth-refresh', {
+            method: 'POST',
+            headers: { 'Authorization': t },
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            setToken(data.token);
+            setUser(data.record);
+            setIsSuperAdmin(false);
+            localStorage.setItem('pb_token', data.token);
+            localStorage.setItem('pb_user', JSON.stringify(data.record));
+          } else {
+            // Clear invalid session
+            setUser(null);
+            setToken("");
+            setIsSuperAdmin(false);
+            localStorage.removeItem('pb_token');
+            localStorage.removeItem('pb_user');
+            localStorage.removeItem('is_superadmin');
+          }
+        } catch {
+          // Clear corrupted session
           setUser(null);
           setToken("");
+          setIsSuperAdmin(false);
           localStorage.removeItem('pb_token');
           localStorage.removeItem('pb_user');
+          localStorage.removeItem('is_superadmin');
         }
       }
       setLoading(false);
@@ -74,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );
@@ -84,4 +139,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
   return ctx;
-} 
+}
