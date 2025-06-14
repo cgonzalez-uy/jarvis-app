@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from '../hooks/useAuth';
+import { getApiUrl } from '../services/configService';
 import ConfirmModal from './ConfirmModal';
 import Notification from './Notification';
-
-const PB_URL = "";
 
 export default function WebhooksCrud() {
   const { token } = useAuth();
@@ -20,12 +19,14 @@ export default function WebhooksCrud() {
 
   async function fetchWebhooks() {
     try {
-      const res = await fetch(`${PB_URL}/api/collections/webhooks/records?perPage=50`, {
+      const apiUrl = getApiUrl('/collections/webhooks/records?perPage=50');
+      const res = await fetch(apiUrl, {
         headers: { Authorization: token },
       });
       const data = await res.json();
       setWebhooks(data.items || []);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching webhooks:', error);
       setNotif({ open: true, message: 'Error al cargar webhooks', type: 'error' });
     }
   }
@@ -50,13 +51,15 @@ export default function WebhooksCrud() {
     if (!confirm.id) return;
     setLoading(true);
     try {
-      await fetch(`${PB_URL}/api/collections/webhooks/records/${confirm.id}`, {
+      const apiUrl = getApiUrl(`/collections/webhooks/records/${confirm.id}`);
+      await fetch(apiUrl, {
         method: "DELETE",
         headers: { Authorization: token },
       });
       setNotif({ open: true, message: 'Webhook eliminado', type: 'success' });
       fetchWebhooks();
-    } catch {
+    } catch (error) {
+      console.error('Error deleting webhook:', error);
       setNotif({ open: true, message: 'Error al eliminar', type: 'error' });
     } finally {
       setLoading(false);
@@ -74,7 +77,8 @@ export default function WebhooksCrud() {
     }
     try {
       if (form.id) {
-        const res = await fetch(`${PB_URL}/api/collections/webhooks/records/${form.id}`, {
+        const apiUrl = getApiUrl(`/collections/webhooks/records/${form.id}`);
+        const res = await fetch(apiUrl, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", Authorization: token },
           body: JSON.stringify({ name: form.name, url: form.url }),
@@ -82,7 +86,8 @@ export default function WebhooksCrud() {
         if (!res.ok) throw new Error();
         setNotif({ open: true, message: 'Actualizado correctamente', type: 'success' });
       } else {
-        const res = await fetch(`${PB_URL}/api/collections/webhooks/records`, {
+        const apiUrl = getApiUrl('/collections/webhooks/records');
+        const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: token },
           body: JSON.stringify({ name: form.name, url: form.url }),
@@ -92,7 +97,8 @@ export default function WebhooksCrud() {
       }
       handleCancel();
       fetchWebhooks();
-    } catch {
+    } catch (error) {
+      console.error('Error saving webhook:', error);
       setNotif({ open: true, message: 'Error al guardar', type: 'error' });
     } finally {
       setLoading(false);

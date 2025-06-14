@@ -1,4 +1,4 @@
-import { getConfig } from './configService';
+import { getConfig, getN8nWebhookUrl } from './configService';
 
 interface AnalysisResult {
   success: boolean;
@@ -11,10 +11,12 @@ interface AnalysisResult {
   htmlReport?: string;
 }
 
-export const sendFilesToAnalysis = async (files: File[], n8nWebhookUrl: string): Promise<AnalysisResult> => {
+export const sendFilesToAnalysis = async (files: File[], webhookPath: string): Promise<AnalysisResult> => {
   try {
-    if (!n8nWebhookUrl) {
-      throw new Error('La URL del webhook de n8n no está configurada');
+    const webhookUrl = getN8nWebhookUrl(webhookPath);
+    
+    if (!webhookUrl) {
+      throw new Error('La URL del webhook de n8n no está configurada. Ve a Configuración para establecerla.');
     }
 
     const formData = new FormData();
@@ -22,13 +24,15 @@ export const sendFilesToAnalysis = async (files: File[], n8nWebhookUrl: string):
       formData.append(`file${index + 1}`, file);
     });
 
-    const response = await fetch(n8nWebhookUrl, {
+    console.log('Sending files to:', webhookUrl);
+
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       body: formData
     });
 
     if (!response.ok) {
-      throw new Error('Error al enviar archivos a n8n');
+      throw new Error(`Error al enviar archivos a n8n: ${response.status} ${response.statusText}`);
     }
 
     const contentType = response.headers.get('content-type');
@@ -55,9 +59,10 @@ export const sendFilesToAnalysis = async (files: File[], n8nWebhookUrl: string):
       };
     }
   } catch (error) {
+    console.error('Error in sendFilesToAnalysis:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Error desconocido al enviar archivos'
     };
   }
-}; 
+};

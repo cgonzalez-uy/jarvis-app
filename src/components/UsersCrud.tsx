@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { getApiUrl } from "../services/configService";
 import ConfirmModal from "./ConfirmModal";
 import Notification from "./Notification";
-
-const PB_URL = "";
 
 export default function UsersCrud() {
   const { token } = useAuth();
@@ -20,12 +19,14 @@ export default function UsersCrud() {
 
   async function fetchUsers() {
     try {
-      const res = await fetch(`${PB_URL}/api/collections/users/records?perPage=50`, {
+      const apiUrl = getApiUrl('/collections/users/records?perPage=50');
+      const res = await fetch(apiUrl, {
         headers: { Authorization: token },
       });
       const data = await res.json();
       setUsers(data.items || []);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching users:', error);
       setNotif({ open: true, message: 'Error al cargar usuarios', type: 'error' });
     }
   }
@@ -50,13 +51,15 @@ export default function UsersCrud() {
     if (!confirm.id) return;
     setLoading(true);
     try {
-      await fetch(`${PB_URL}/api/collections/users/records/${confirm.id}`, {
+      const apiUrl = getApiUrl(`/collections/users/records/${confirm.id}`);
+      await fetch(apiUrl, {
         method: "DELETE",
         headers: { Authorization: token },
       });
       setNotif({ open: true, message: 'Usuario eliminado', type: 'success' });
       fetchUsers();
-    } catch {
+    } catch (error) {
+      console.error('Error deleting user:', error);
       setNotif({ open: true, message: 'Error al eliminar', type: 'error' });
     } finally {
       setLoading(false);
@@ -74,7 +77,8 @@ export default function UsersCrud() {
     }
     try {
       if (form.id) {
-        const res = await fetch(`${PB_URL}/api/collections/users/records/${form.id}`, {
+        const apiUrl = getApiUrl(`/collections/users/records/${form.id}`);
+        const res = await fetch(apiUrl, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", Authorization: token },
           body: JSON.stringify({ email: form.email, username: form.username, name: form.name }),
@@ -82,7 +86,8 @@ export default function UsersCrud() {
         if (!res.ok) throw new Error();
         setNotif({ open: true, message: 'Actualizado correctamente', type: 'success' });
       } else {
-        const res = await fetch(`${PB_URL}/api/collections/users/records`, {
+        const apiUrl = getApiUrl('/collections/users/records');
+        const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: token },
           body: JSON.stringify({ email: form.email, password: form.password, passwordConfirm: form.password, username: form.username, name: form.name }),
@@ -92,7 +97,8 @@ export default function UsersCrud() {
       }
       handleCancel();
       fetchUsers();
-    } catch {
+    } catch (error) {
+      console.error('Error saving user:', error);
       setNotif({ open: true, message: 'Error al guardar', type: 'error' });
     } finally {
       setLoading(false);

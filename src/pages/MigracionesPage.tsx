@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { validateV2TReport, validateEdgeGatewayReport, validateVDCReport } from '../services/fileValidation';
 import { sendFilesToAnalysis } from '../services/n8nService';
 import { useAuth } from '../hooks/useAuth';
+import { getApiUrl } from '../services/configService';
 
 interface FileUpload {
   name: string;
@@ -14,8 +15,6 @@ interface FileUpload {
     message: string;
   };
 }
-
-const BASE_N8N_URL = 'http://localhost:5678/webhook-test/';
 
 interface MigracionesPageProps {
   vdcName?: string;
@@ -71,12 +70,14 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
 
   async function fetchWebhooks() {
     try {
-      const res = await fetch(`http://localhost:8090/api/collections/webhooks/records?perPage=50`, {
+      const apiUrl = getApiUrl('/collections/webhooks/records?perPage=50');
+      const res = await fetch(apiUrl, {
         headers: { Authorization: token },
       });
       const data = await res.json();
       setWebhooks(data.items || []);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching webhooks:', error);
       setWebhooks([]);
     }
   }
@@ -178,16 +179,19 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     setIsAnalyzing(true);
     const validFiles = files.filter(f => f.file && f.validation?.isValid).map(f => f.file!);
     const webhook = webhooks.find(w => w.id === selectedWebhook);
-    const url = BASE_N8N_URL + (webhook?.path || webhook?.url || "");
+    const webhookPath = webhook?.url || webhook?.path || "";
+    
     try {
-      const result = await sendFilesToAnalysis(validFiles, url);
+      const result = await sendFilesToAnalysis(validFiles, webhookPath);
       if (result.success) {
         setAnalysisResult(result);
       } else {
         console.error('Error en el análisis:', result.message);
+        setWebhookError(result.message);
       }
     } catch (error) {
       console.error('Error al enviar archivos:', error);
+      setWebhookError('Error al enviar archivos para análisis');
     } finally {
       setIsAnalyzing(false);
     }
@@ -584,4 +588,4 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
   );
 };
 
-export default MigracionesPage; 
+export default MigracionesPage;

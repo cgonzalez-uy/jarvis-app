@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { getApiUrl } from '../services/configService';
 
 interface AuthContextType {
   user: any;
@@ -39,8 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return true;
       }
 
-      // Regular PocketBase authentication
-      const res = await fetch('/api/collections/users/auth-with-password', {
+      // Regular PocketBase authentication using configured URL
+      const apiUrl = getApiUrl('/collections/users/auth-with-password');
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identity: email, password }),
@@ -56,7 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return true;
       }
       return false;
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       return false;
     }
   }
@@ -91,8 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
           
-          // Validate regular token against PocketBase
-          const res = await fetch('/api/collections/users/auth-refresh', {
+          // Validate regular token against PocketBase using configured URL
+          const apiUrl = getApiUrl('/collections/users/auth-refresh');
+          const res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Authorization': t },
           });
@@ -113,7 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('pb_user');
             localStorage.removeItem('is_superadmin');
           }
-        } catch {
+        } catch (error) {
+          console.error('Session validation error:', error);
           // Clear corrupted session
           setUser(null);
           setToken("");
