@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { ServerCog, Settings, Link2, Users, Shield, ChevronRight, Zap } from 'lucide-react';
+import { ServerCog, Settings, Link2, Users, Shield, ChevronRight, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const navigation = [
@@ -8,28 +8,24 @@ const navigation = [
     href: '/migraciones',
     icon: ServerCog,
     description: 'Gestiona migraciones',
-    color: 'from-primary-500 to-primary-700'
   },
   {
     name: 'Configuración',
     href: '/configuracion',
     icon: Settings,
     description: 'Ajustes del sistema',
-    color: 'from-slate-500 to-slate-700'
   },
   {
     name: 'Webhooks',
     href: '/webhooks',
     icon: Link2,
     description: 'Integraciones activas',
-    color: 'from-accent-teal to-emerald-600'
   },
   {
     name: 'Usuarios',
     href: '/usuarios',
     icon: Users,
     description: 'Administrar usuarios',
-    color: 'from-accent-purple to-accent-pink'
   }
 ];
 
@@ -38,63 +34,55 @@ const Sidebar = () => {
   const avatar = user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
   
   return (
-    <aside className="w-80 bg-gradient-to-b from-slate-900 via-slate-900/95 to-primary-950/95 backdrop-blur-xl border-r border-white/10 flex flex-col shadow-2xl">
-      {/* Animated background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/20 via-transparent to-accent-purple/10 opacity-50"></div>
-      
-      <div className="relative flex-1 flex flex-col">
+    <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-sm">
+      <div className="flex-1 flex flex-col">
         {/* Navigation Header */}
-        <div className="px-6 py-8">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-2 h-8 bg-gradient-to-b from-primary-400 to-accent-purple rounded-full"></div>
-            <h2 className="text-lg font-bold text-white">Navegación</h2>
+        <div className="px-6 py-6 border-b border-slate-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
+            <h2 className="text-lg font-semibold text-slate-800">Navegación</h2>
           </div>
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-6 space-y-3">
-          {navigation.map((item, index) => (
+        <nav className="flex-1 px-6 py-6 space-y-2">
+          {navigation.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               className={({ isActive }) =>
-                `group relative flex items-center px-4 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 overflow-hidden ${
+                `group relative flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'bg-white/20 text-white shadow-glow-primary'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-primary-50 text-primary-700 border border-primary-100'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  {/* Background gradient */}
-                  <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-20 ${isActive ? 'opacity-30' : ''} transition-opacity duration-300`}></div>
-                  
                   {/* Icon container */}
-                  <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center mr-4 transition-all duration-300 ${
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
                     isActive 
-                      ? `bg-gradient-to-r ${item.color} shadow-lg` 
-                      : 'bg-white/10 group-hover:bg-white/20'
+                      ? 'bg-primary-100 text-primary-600' 
+                      : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-600'
                   }`}>
-                    <item.icon className={`w-5 h-5 transition-all duration-300 ${
-                      isActive ? 'text-white scale-110' : 'text-slate-400 group-hover:text-white group-hover:scale-110'
-                    }`} />
+                    <item.icon className="w-5 h-5" />
                   </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="truncate">{item.name}</span>
-                      <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
+                      <span className="truncate font-medium">{item.name}</span>
+                      <ChevronRight className={`w-4 h-4 transition-all duration-200 ${
                         isActive 
-                          ? 'text-white translate-x-1' 
-                          : 'text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1'
+                          ? 'text-primary-500 translate-x-1' 
+                          : 'text-slate-400 group-hover:text-slate-500 group-hover:translate-x-0.5'
                       }`} />
                     </div>
-                    <p className={`text-xs mt-1 transition-colors duration-300 ${
+                    <p className={`text-xs mt-0.5 transition-colors duration-200 ${
                       isActive 
-                        ? 'text-slate-200' 
-                        : 'text-slate-500 group-hover:text-slate-400'
+                        ? 'text-primary-600/80' 
+                        : 'text-slate-500 group-hover:text-slate-600'
                     }`}>
                       {item.description}
                     </p>
@@ -102,7 +90,7 @@ const Sidebar = () => {
                   
                   {/* Active indicator */}
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-400 to-accent-purple rounded-r-full"></div>
+                    <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-sm"></div>
                   )}
                 </>
               )}
@@ -111,53 +99,42 @@ const Sidebar = () => {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-6 border-t border-white/10">
-          <div className={`relative overflow-hidden rounded-2xl p-4 transition-all duration-300 ${
+        <div className="p-6 border-t border-slate-100">
+          <div className={`rounded-xl p-4 transition-all duration-200 ${
             isSuperAdmin 
-              ? 'bg-gradient-to-r from-accent-purple/20 to-accent-pink/20 border border-accent-purple/30' 
-              : 'bg-white/5 border border-white/10'
-          } backdrop-blur-md`}>
-            {/* Background pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
-            
-            <div className="relative flex items-center space-x-4">
+              ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100' 
+              : 'bg-slate-50 border border-slate-200'
+          }`}>
+            <div className="flex items-center space-x-3">
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold text-sm transition-all duration-200 ${
                   isSuperAdmin 
-                    ? 'bg-gradient-to-br from-accent-purple to-accent-pink shadow-glow-secondary' 
-                    : 'bg-gradient-to-br from-primary-500 to-primary-700 shadow-glow-primary'
+                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
+                    : 'bg-primary-100 text-primary-700 border border-primary-200'
                 }`}>
                   {isSuperAdmin ? (
-                    <Shield className="w-5 h-5 text-white" />
+                    <Shield className="w-5 h-5" />
                   ) : (
-                    <span className="text-sm font-bold text-white">{avatar}</span>
+                    <span>{avatar}</span>
                   )}
-                  
-                  {/* Online status */}
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></div>
-                  </div>
                 </div>
               </div>
               
               {/* User Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">
+                <p className="text-sm font-semibold text-slate-800 truncate">
                   {user?.username || user?.email}
                 </p>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   {isSuperAdmin ? (
-                    <>
-                      <Zap className="w-3 h-3 text-accent-purple" />
-                      <span className="text-xs bg-gradient-to-r from-accent-purple to-accent-pink bg-clip-text text-transparent font-bold">
-                        Super Administrador
-                      </span>
-                    </>
+                    <span className="text-xs font-medium text-indigo-600">
+                      Super Administrador
+                    </span>
                   ) : (
                     <>
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-slate-400 font-medium">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                      <span className="text-xs text-slate-500">
                         En línea
                       </span>
                     </>
