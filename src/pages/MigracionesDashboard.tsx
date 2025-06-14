@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
   FileText, 
-  Eye, 
   Trash2, 
   Play, 
   Plus, 
@@ -20,7 +19,6 @@ import {
   Calendar,
   Filter,
   MoreHorizontal,
-  Download,
   RefreshCw,
   X,
   Building2,
@@ -35,9 +33,12 @@ import {
   Pause,
   RotateCcw,
   Badge,
-  Circle
+  Circle,
+  Target,
+  Cloud
 } from 'lucide-react';
 import MigracionesPage from './MigracionesPage';
+import ComingSoonPage from './ComingSoonPage';
 import { useAuth } from '../hooks/useAuth';
 import { getApiUrl } from '../services/configService';
 
@@ -163,6 +164,8 @@ const MigracionesDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showAssessment, setShowAssessment] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState('');
   const [assessmentVdc, setAssessmentVdc] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'fecha_creacion', dir: 'desc' });
@@ -171,7 +174,6 @@ const MigracionesDashboard = () => {
   const [vdcName, setVdcName] = useState('');
   const [inputVdc, setInputVdc] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [changingState, setChangingState] = useState<string | null>(null);
 
   // Calcular estadísticas basadas en los estados
   const stats = React.useMemo(() => {
@@ -260,34 +262,9 @@ const MigracionesDashboard = () => {
     fetchMigraciones();
   };
 
-  // Cambiar estado de migración
-  const handleChangeState = async (migracionId: string, newState: string) => {
-    setChangingState(migracionId);
-    
-    try {
-      const apiUrl = getApiUrl(`/collections/migraciones/records/${migracionId}`);
-      const response = await fetch(apiUrl, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token
-        },
-        body: JSON.stringify({ 
-          estado: newState,
-          updated: new Date().toISOString()
-        })
-      });
-
-      if (response.ok) {
-        fetchMigraciones(); // Refrescar la lista
-      } else {
-        console.error('Error updating migration state');
-      }
-    } catch (error) {
-      console.error('Error updating migration state:', error);
-    } finally {
-      setChangingState(null);
-    }
+  const handleCloseComingSoon = () => {
+    setShowComingSoon(false);
+    setComingSoonFeature('');
   };
 
   // Manejar assessment (verificar si existe y actualizar o crear nuevo)
@@ -327,15 +304,13 @@ const MigracionesDashboard = () => {
     }
   };
 
+  // Manejar funcionalidades próximas
+  const handleComingSoonFeature = (featureName: string) => {
+    setComingSoonFeature(featureName);
+    setShowComingSoon(true);
+  };
+
   // Actions
-  const handleDownload = (id: string) => {
-    console.log('Download:', id);
-  };
-  
-  const handleView = (id: string) => {
-    console.log('View:', id);
-  };
-  
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta migración?')) {
       return;
@@ -469,6 +444,18 @@ const MigracionesDashboard = () => {
         <MigracionesPage 
           vdcName={vdcName || assessmentVdc} 
           onClose={showNew ? handleCloseNew : handleCloseAssessment} 
+        />
+      </div>
+    );
+  }
+
+  // Show coming soon page
+  if (showComingSoon) {
+    return (
+      <div className="h-full">
+        <ComingSoonPage 
+          featureName={comingSoonFeature}
+          onClose={handleCloseComingSoon} 
         />
       </div>
     );
@@ -676,42 +663,9 @@ const MigracionesDashboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="space-y-2">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-sm font-medium ${estadoConfig.bg} ${estadoConfig.text}`}>
-                            <IconComponent className="w-4 h-4" />
-                            {migracion.estado}
-                          </div>
-                          
-                          {/* Quick state change buttons */}
-                          {estadoConfig.nextStates && estadoConfig.nextStates.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {estadoConfig.nextStates.map(nextState => (
-                                <button
-                                  key={nextState}
-                                  onClick={() => handleChangeState(migracion.id, nextState)}
-                                  disabled={changingState === migracion.id}
-                                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
-                                    nextState === 'Rollback' 
-                                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                      : nextState === 'Completada'
-                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                  }`}
-                                >
-                                  {changingState === migracion.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : nextState === 'Rollback' ? (
-                                    <RotateCcw className="w-3 h-3" />
-                                  ) : nextState === 'Completada' ? (
-                                    <CheckCircle className="w-3 h-3" />
-                                  ) : (
-                                    <SkipForward className="w-3 h-3" />
-                                  )}
-                                  {nextState}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                        <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium ${estadoConfig.bg} ${estadoConfig.text}`}>
+                          <IconComponent className="w-4 h-4" />
+                          {migracion.estado}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -735,27 +689,27 @@ const MigracionesDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleView(migracion.id)}
-                            className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                            title="Ver detalles"
+                            onClick={() => handleAssessment(migracion.vdc)}
+                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Ejecutar/Actualizar assessment"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Target className="w-4 h-4" />
                           </button>
                           
                           <button
-                            onClick={() => handleAssessment(migracion.vdc)}
+                            onClick={() => handleComingSoonFeature('Ejecutar Migración')}
                             className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="Ejecutar/Actualizar assessment"
+                            title="Ejecutar migración"
                           >
                             <Play className="w-4 h-4" />
                           </button>
                           
                           <button
-                            onClick={() => handleDownload(migracion.id)}
-                            className="p-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
-                            title="Descargar reporte"
+                            onClick={() => handleComingSoonFeature('Prepare T0')}
+                            className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="Prepare T0"
                           >
-                            <Download className="w-4 h-4" />
+                            <Cloud className="w-4 h-4" />
                           </button>
                           
                           <button
