@@ -17,7 +17,9 @@ import {
   FileCheck,
   PlayCircle,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Maximize2,
+  ExternalLink
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { validateV2TReport, validateEdgeGatewayReport, validateVDCReport } from '../services/fileValidation';
@@ -81,6 +83,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     recommendations?: string[];
     htmlReport?: string;
   } | null>(null);
+  const [reportFullscreen, setReportFullscreen] = useState(false);
 
   const { token } = useAuth();
   const [vdcName, setVdcName] = useState(initialVdcName || '');
@@ -207,6 +210,16 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  };
+
+  const openReportInNewTab = () => {
+    if (!analysisResult?.htmlReport) return;
+    const htmlContent = extractHtml(analysisResult.htmlReport);
+    const newWindow = window.open();
+    if (newWindow) {
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    }
   };
 
   const renderValidationDetails = (validation: FileUpload['validation']) => {
@@ -519,8 +532,8 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
 
     if (analysisResult.htmlReport) {
       return (
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b border-slate-200 bg-slate-50">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-white" />
@@ -530,19 +543,59 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
                 <p className="text-slate-600">Resultados del procesamiento de archivos</p>
               </div>
             </div>
-            <button
-              onClick={handleDownloadReport}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-secondary-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-secondary-600 hover:to-secondary-800 transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              <FileText className="w-5 h-5" />
-              Descargar Reporte
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={openReportInNewTab}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Abrir en Nueva Pestaña
+              </button>
+              <button
+                onClick={() => setReportFullscreen(!reportFullscreen)}
+                className="inline-flex items-center gap-2 bg-slate-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-700 transition-colors"
+              >
+                <Maximize2 className="w-4 h-4" />
+                {reportFullscreen ? 'Minimizar' : 'Pantalla Completa'}
+              </button>
+              <button
+                onClick={handleDownloadReport}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-secondary-700 text-white px-4 py-2 rounded-lg font-medium hover:from-secondary-600 hover:to-secondary-800 transition-all duration-300"
+              >
+                <FileText className="w-4 h-4" />
+                Descargar
+              </button>
+            </div>
           </div>
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <div
-              className="w-full h-96 overflow-auto bg-slate-50"
-              dangerouslySetInnerHTML={{ __html: extractHtml(analysisResult.htmlReport) }}
-            />
+          
+          {/* Report Container */}
+          <div className={`transition-all duration-300 ${
+            reportFullscreen 
+              ? 'fixed inset-0 z-50 bg-white' 
+              : 'relative'
+          }`}>
+            {reportFullscreen && (
+              <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
+                <h3 className="text-lg font-semibold text-slate-800">Reporte de Análisis - Pantalla Completa</h3>
+                <button
+                  onClick={() => setReportFullscreen(false)}
+                  className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+            
+            <div className={`overflow-auto bg-white ${
+              reportFullscreen 
+                ? 'h-full p-6' 
+                : 'h-[600px] p-4'
+            }`}>
+              <div
+                className="w-full min-h-full"
+                dangerouslySetInnerHTML={{ __html: extractHtml(analysisResult.htmlReport) }}
+              />
+            </div>
           </div>
         </div>
       );
@@ -637,29 +690,29 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
       </div>
 
       <div className="px-8 py-8">
-        {/* Stepper */}
+        {/* Stepper - Ahora usa todo el ancho disponible */}
         <div className="mb-12">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex items-center justify-between">
             {[
               { step: 1, title: 'Carga de Archivos', icon: Upload },
               { step: 2, title: 'Validación', icon: Shield },
               { step: 3, title: 'Análisis', icon: Activity }
             ].map(({ step, title, icon: Icon }) => (
-              <div key={step} className="flex flex-col items-center">
-                <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+              <div key={step} className="flex flex-col items-center flex-1">
+                <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                   step === activeStep 
                     ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-glow-primary transform scale-110' 
                     : step < activeStep 
                       ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg' 
                       : 'bg-slate-200 text-slate-500'
                 }`}>
-                  {step < activeStep ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                  {step < activeStep ? <CheckCircle2 className="w-8 h-8" /> : <Icon className="w-8 h-8" />}
                   
                   {step === activeStep && (
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 to-accent-purple/20 rounded-2xl opacity-100 transition-opacity blur-sm animate-pulse"></div>
                   )}
                 </div>
-                <span className={`mt-3 text-sm font-semibold transition-colors ${
+                <span className={`mt-4 text-lg font-semibold transition-colors ${
                   step === activeStep 
                     ? 'text-primary-600' 
                     : step < activeStep 
@@ -671,8 +724,8 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
               </div>
             ))}
           </div>
-          <div className="relative mt-6 max-w-2xl mx-auto">
-            <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 rounded-full">
+          <div className="relative mt-8">
+            <div className="absolute top-1/2 left-0 right-0 h-2 bg-slate-200 -translate-y-1/2 rounded-full">
               <div 
                 className="h-full bg-gradient-to-r from-primary-500 to-accent-purple transition-all duration-500 rounded-full" 
                 style={{ width: `${((activeStep - 1) / 2) * 100}%` }} 
@@ -681,26 +734,26 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
           </div>
         </div>
 
-        {/* Step Content */}
-        <div className="max-w-4xl mx-auto">
+        {/* Step Content - Sin limitación de ancho */}
+        <div className="w-full">
           {renderStepContent()}
         </div>
 
         {/* Action Buttons */}
         {activeStep < 3 && (
-          <div className="mt-12 flex justify-center gap-4 max-w-4xl mx-auto">
+          <div className="mt-12 flex justify-center gap-4">
             <button
               onClick={() => setActiveStep(activeStep - 1)}
               disabled={activeStep === 1}
-              className="flex items-center gap-2 px-6 py-3 text-slate-700 bg-white border border-slate-300 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="flex items-center gap-2 px-8 py-4 text-slate-700 bg-white border border-slate-300 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
               Anterior
             </button>
             <button
               onClick={handleNextStep}
               disabled={activeStep === 1 && files.some(f => !f.file) || isValidating}
-              className="flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary"
+              className="flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-10 py-4 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary"
             >
               {isValidating ? (
                 <>
@@ -710,7 +763,7 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
               ) : (
                 <>
                   Siguiente
-                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                  <ArrowLeft className="w-5 h-5 rotate-180" />
                 </>
               )}
             </button>
