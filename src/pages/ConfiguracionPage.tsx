@@ -11,7 +11,9 @@ import {
   EyeOff,
   Copy,
   ExternalLink,
-  Trash2
+  Trash2,
+  Terminal,
+  FileText
 } from 'lucide-react';
 import { getConfig, saveConfig, resetConfig } from '../services/configService';
 
@@ -178,85 +180,178 @@ tunnels:
         </div>
       )}
 
-      {/* Ngrok Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-        <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
-          <Globe className="w-6 h-6" />
-          Configuración de ngrok (SOLUCIÓN AL ERROR)
+      {/* ERROR SOLVED - Ngrok Instructions */}
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+        <h2 className="text-xl font-semibold text-red-800 mb-4 flex items-center gap-2">
+          <AlertCircle className="w-6 h-6" />
+          ⚠️ PROBLEMA DETECTADO - Archivo ngrok incorrecto
         </h2>
         
-        <div className="space-y-4 text-blue-700">
-          <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 mb-4">
-            <h4 className="font-bold text-yellow-800 mb-2">⚠️ Error ngrok solucionado:</h4>
-            <p className="text-yellow-700 text-sm">
-              La cuenta gratuita de ngrok solo permite 1 sesión. Usa la configuración de múltiples túneles:
+        <div className="space-y-4 text-red-700">
+          <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+            <h4 className="font-bold text-red-800 mb-2">🔴 El problema:</h4>
+            <p className="text-red-700 text-sm mb-2">
+              Tienes <code>ngrok.yaml</code> pero debe ser <code>ngrok.yml</code>
+            </p>
+            <p className="text-red-700 text-sm">
+              ngrok requiere extensión <code>.yml</code> (no .yaml)
             </p>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-2">1. Crear archivo de configuración ngrok:</h3>
-            <p className="text-sm mb-2">Crea el archivo <code className="bg-blue-100 px-2 py-1 rounded">ngrok.yml</code> en tu directorio home:</p>
-            <div className="bg-blue-100 rounded-lg p-3 font-mono text-sm relative">
-              <pre className="whitespace-pre-wrap">{ngrokConfigContent}</pre>
-              <button 
-                onClick={() => copyToClipboard(ngrokConfigContent)}
-                className="absolute top-2 right-2 p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
+          <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+            <h4 className="font-bold text-green-800 mb-2">✅ Solución:</h4>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold mb-2">1. Elimina el archivo actual:</p>
+                <div className="bg-gray-100 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                  <span>del "C:\Users\Christian González\.ngrok2\ngrok.yaml"</span>
+                  <button 
+                    onClick={() => copyToClipboard('del "C:\\Users\\Christian González\\.ngrok2\\ngrok.yaml"')}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">2. Crea el archivo correcto:</p>
+                <div className="bg-gray-100 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                  <span>notepad "C:\Users\Christian González\.ngrok2\ngrok.yml"</span>
+                  <button 
+                    onClick={() => copyToClipboard('notepad "C:\\Users\\Christian González\\.ngrok2\\ngrok.yml"')}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">3. Pega este contenido exacto:</p>
+                <div className="bg-gray-800 text-green-400 rounded-lg p-4 font-mono text-sm relative">
+                  <pre className="whitespace-pre-wrap">{ngrokConfigContent}</pre>
+                  <button 
+                    onClick={() => copyToClipboard(ngrokConfigContent)}
+                    className="absolute top-2 right-2 p-1 hover:bg-gray-700 rounded text-white"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">4. Obtén tu token de ngrok:</p>
+                <div className="flex items-center gap-2">
+                  <a 
+                    href="https://dashboard.ngrok.com/get-started/your-authtoken" 
+                    target="_blank"
+                    className="text-blue-600 underline hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ir al dashboard de ngrok
+                  </a>
+                </div>
+                <p className="text-xs mt-1">
+                  Copia tu token y reemplaza <code>TU_AUTH_TOKEN_AQUI</code> en el archivo
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">5. Guarda el archivo y ejecuta:</p>
+                <div className="bg-gray-100 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                  <span>ngrok start --all</span>
+                  <button 
+                    onClick={() => copyToClipboard('ngrok start --all')}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <p className="text-xs mt-2">
-              <strong>Importante:</strong> Reemplaza <code>TU_AUTH_TOKEN_AQUI</code> con tu token de ngrok desde 
-              <a href="https://dashboard.ngrok.com/get-started/your-authtoken" target="_blank" className="underline"> aquí</a>
-            </p>
           </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">2. Ubicación del archivo:</h3>
-            <div className="bg-blue-100 rounded-lg p-3 font-mono text-sm space-y-1">
-              <div className="flex items-center justify-between">
-                <span><strong>Windows:</strong> C:\Users\[usuario]\.ngrok2\ngrok.yml</span>
+        </div>
+      </div>
+
+      {/* Ngrok Instructions */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+        <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
+          <Terminal className="w-6 h-6" />
+          Comandos de CMD/PowerShell - Paso a paso
+        </h2>
+        
+        <div className="space-y-4 text-blue-700">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Comando 1: Eliminar archivo incorrecto
+              </h4>
+              <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                <span>del "C:\Users\Christian González\.ngrok2\ngrok.yaml"</span>
                 <button 
-                  onClick={() => copyToClipboard('C:\\Users\\[usuario]\\.ngrok2\\ngrok.yml')}
-                  className="p-1 hover:bg-blue-200 rounded"
+                  onClick={() => copyToClipboard('del "C:\\Users\\Christian González\\.ngrok2\\ngrok.yaml"')}
+                  className="p-1 hover:bg-gray-800 rounded text-white"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex items-center justify-between">
-                <span><strong>Mac/Linux:</strong> ~/.ngrok2/ngrok.yml</span>
+            </div>
+
+            <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Comando 2: Crear archivo correcto
+              </h4>
+              <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                <span>notepad "C:\Users\Christian González\.ngrok2\ngrok.yml"</span>
                 <button 
-                  onClick={() => copyToClipboard('~/.ngrok2/ngrok.yml')}
-                  className="p-1 hover:bg-blue-200 rounded"
+                  onClick={() => copyToClipboard('notepad "C:\\Users\\Christian González\\.ngrok2\\ngrok.yml"')}
+                  className="p-1 hover:bg-gray-800 rounded text-white"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                <Terminal className="w-4 h-4" />
+                Comando 3: Iniciar túneles
+              </h4>
+              <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
+                <span>ngrok start --all</span>
+                <button 
+                  onClick={() => copyToClipboard('ngrok start --all')}
+                  className="p-1 hover:bg-gray-800 rounded text-white"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">3. Iniciar ambos túneles:</h3>
-            <div className="bg-blue-100 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
-              <span>ngrok start --all</span>
-              <button 
-                onClick={() => copyToClipboard('ngrok start --all')}
-                className="p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
+
+          <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
+            <h4 className="font-bold text-yellow-800 mb-2">📋 Resultado esperado:</h4>
+            <div className="bg-black text-green-400 rounded-lg p-3 font-mono text-xs">
+              ngrok                                                                           (Ctrl+C to quit)<br/>
+              <br/>
+              Session Status                online<br/>
+              Account                       tu_email@example.com (Plan: Free)<br/>
+              Version                       3.x.x<br/>
+              Region                        United States (us)<br/>
+              Latency                       45ms<br/>
+              <br/>
+              Forwarding                    https://abc123.ngrok.io → http://localhost:8090<br/>
+              Forwarding                    https://xyz789.ngrok.io → http://localhost:5678<br/>
+              <br/>
+              Connections                   ttl     opn     rt1     rt5     p50     p90<br/>
+                                            0       0       0.00    0.00    0.00    0.00
             </div>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">4. Obtener las URLs:</h3>
-            <p className="text-sm">
-              ngrok mostrará algo como:
+            <p className="text-yellow-700 text-sm mt-2">
+              <strong>Importante:</strong> Copia las URLs https://abc123.ngrok.io y https://xyz789.ngrok.io para usar en la configuración below.
             </p>
-            <div className="bg-blue-100 rounded-lg p-3 font-mono text-xs">
-              pocketbase (http://localhost:8090) → https://abc123.ngrok.io<br/>
-              n8n (http://localhost:5678) → https://xyz789.ngrok.io
-            </div>
           </div>
         </div>
       </div>
