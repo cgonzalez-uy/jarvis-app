@@ -1,4 +1,24 @@
-import { Upload, FileText, CheckCircle2, AlertCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { 
+  Upload, 
+  FileText, 
+  CheckCircle2, 
+  AlertCircle, 
+  XCircle, 
+  Loader2, 
+  AlertTriangle,
+  ArrowLeft,
+  Server,
+  Globe,
+  Link2,
+  Zap, 
+  Shield,
+  Activity,
+  Target,
+  FileCheck,
+  PlayCircle,
+  TrendingUp,
+  Sparkles
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { validateV2TReport, validateEdgeGatewayReport, validateVDCReport } from '../services/fileValidation';
 import { sendFilesToAnalysis } from '../services/n8nService';
@@ -14,6 +34,8 @@ interface FileUpload {
     isValid: boolean;
     message: string;
   };
+  icon: React.ComponentType<any>;
+  color: string;
 }
 
 interface MigracionesPageProps {
@@ -27,19 +49,25 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
       name: 'Reporte de Evaluación V2T',
       file: null,
       required: true,
-      pattern: 'v2tAssessmentReport-Summary-'
+      pattern: 'v2tAssessmentReport-Summary-',
+      icon: Target,
+      color: 'from-purple-500 to-purple-700'
     },
     {
       name: 'Reporte de Edge Gateways',
       file: null,
       required: true,
-      pattern: 'edgeGatewaysDetailedReport'
+      pattern: 'edgeGatewaysDetailedReport',
+      icon: Globe,
+      color: 'from-blue-500 to-blue-700'
     },
     {
       name: 'Reporte de VDC',
       file: null,
       required: true,
-      pattern: 'Reporte-VDC'
+      pattern: 'Reporte-VDC',
+      icon: Server,
+      color: 'from-emerald-500 to-emerald-700'
     }
   ]);
 
@@ -215,14 +243,19 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     if (!validation) return null;
 
     return (
-      <div className="mt-2">
-        <p className={`text-sm ${
+      <div className="mt-3">
+        <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
           validation.isValid
-            ? 'text-green-600 dark:text-green-400'
-            : 'text-red-600 dark:text-red-400'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
+          {validation.isValid ? (
+            <CheckCircle2 className="w-4 h-4" />
+          ) : (
+            <XCircle className="w-4 h-4" />
+          )}
           {validation.message}
-        </p>
+        </div>
       </div>
     );
   };
@@ -231,189 +264,269 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     switch (activeStep) {
       case 1:
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* VDC Name Input */}
             {typeof initialVdcName !== 'string' && (
-              <div className="mb-4">
-                <label className="block mb-2 font-medium">Nombre del VDC</label>
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 w-full max-w-md"
-                  value={vdcName}
-                  onChange={e => setVdcName(e.target.value)}
-                  placeholder="Ej: 01-PROD-PRESIDENCIA-S01"
-                />
-              </div>
-            )}
-            {files.map((fileUpload, index) => (
-              <div
-                key={index}
-                className={`relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${
-                  isDragging === index
-                    ? 'border-primary bg-primary/5'
-                    : fileUpload.file
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/10'
-                    : 'border-gray-300 hover:border-primary/50'
-                }`}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full ${
-                      fileUpload.file
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        {fileUpload.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {fileUpload.file
-                          ? `Archivo cargado: ${fileUpload.file.name}`
-                          : `Arrastra y suelta el archivo con el patrón: ${fileUpload.pattern}`}
-                      </p>
-                    </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-700 rounded-xl flex items-center justify-center">
+                    <Server className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {fileUpload.file ? (
-                      <>
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <AlertCircle className="w-5 h-5" />
-                        </button>
-                        <span className="text-green-600 dark:text-green-400">
-                          <CheckCircle2 className="w-5 h-5" />
-                        </span>
-                      </>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => handleFileInput(e, index)}
-                          accept=".csv,.xlsx,.xls"
-                        />
-                        <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:text-primary-dark">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Seleccionar archivo
-                        </div>
-                      </label>
-                    )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Configuración Inicial</h3>
+                    <p className="text-sm text-slate-600">Configura el nombre del VDC</p>
                   </div>
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Nombre del VDC
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors bg-slate-50/50 hover:bg-white"
+                    value={vdcName}
+                    onChange={e => setVdcName(e.target.value)}
+                    placeholder="Ej: 01-PROD-PRESIDENCIA-S01"
+                  />
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* File Upload Cards */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Carga de Archivos</h2>
+                <p className="text-slate-600">Arrastra y suelta los archivos requeridos o selecciónalos manualmente</p>
+              </div>
+
+              {files.map((fileUpload, index) => {
+                const IconComponent = fileUpload.icon;
+                return (
+                  <div
+                    key={index}
+                    className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 ${
+                      isDragging === index
+                        ? 'border-primary-400 bg-primary-50 scale-105 shadow-lg'
+                        : fileUpload.file
+                        ? 'border-emerald-400 bg-emerald-50 shadow-sm'
+                        : 'border-slate-300 hover:border-primary-300 hover:bg-slate-50'
+                    }`}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-6">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                          fileUpload.file
+                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-glow-secondary'
+                            : `bg-gradient-to-br ${fileUpload.color} shadow-lg`
+                        }`}>
+                          <IconComponent className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-slate-800 mb-1">
+                            {fileUpload.name}
+                          </h3>
+                          <p className="text-sm text-slate-600 mb-2">
+                            {fileUpload.file
+                              ? `✓ Archivo cargado: ${fileUpload.file.name}`
+                              : `Arrastra el archivo con patrón: ${fileUpload.pattern}`}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <FileCheck className="w-3 h-3" />
+                            <span>Formato: CSV, XLSX, XLS</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        {fileUpload.file ? (
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => removeFile(index)}
+                              className="p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
+                            >
+                              <XCircle className="w-6 h-6" />
+                            </button>
+                            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => handleFileInput(e, index)}
+                              accept=".csv,.xlsx,.xls"
+                            />
+                            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                              <Upload className="w-5 h-5 mr-2" />
+                              Seleccionar archivo
+                            </div>
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {renderValidationDetails(fileUpload.validation)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-6">
-            {files.map((fileUpload, index) => (
-              <div
-                key={index}
-                className={`p-6 rounded-lg border ${
-                  fileUpload.validation?.isValid
-                    ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/10'
-                    : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/10'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full ${
-                      fileUpload.validation?.isValid
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                        : 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                    }`}>
-                      {fileUpload.validation?.isValid ? (
-                        <CheckCircle2 className="w-6 h-6" />
-                      ) : (
-                        <XCircle className="w-6 h-6" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        {fileUpload.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {fileUpload.file?.name}
-                      </p>
-                      {renderValidationDetails(fileUpload.validation)}
+          <div className="space-y-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Activity className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Validación de Archivos</h2>
+              <p className="text-slate-600">Verificando la integridad y formato de tus archivos</p>
+            </div>
+
+            <div className="space-y-6">
+              {files.map((fileUpload, index) => {
+                const IconComponent = fileUpload.icon;
+                const isValid = fileUpload.validation?.isValid;
+                
+                return (
+                  <div
+                    key={index}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
+                      isValid === true
+                        ? 'border-emerald-200 bg-emerald-50'
+                        : isValid === false
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-6">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                        isValid === true
+                          ? 'bg-emerald-100 text-emerald-600'
+                          : isValid === false
+                          ? 'bg-red-100 text-red-600'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {isValid === true ? (
+                          <CheckCircle2 className="w-7 h-7" />
+                        ) : isValid === false ? (
+                          <XCircle className="w-7 h-7" />
+                        ) : (
+                          <IconComponent className="w-7 h-7" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-800 mb-1">
+                          {fileUpload.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 mb-2">
+                          {fileUpload.file?.name}
+                        </p>
+                        {renderValidationDetails(fileUpload.validation)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         );
 
       case 3:
         const allValid = files.every(f => f.validation?.isValid);
         return (
-          <div className="text-center space-y-6">
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${
-              allValid
-                ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-            }`}>
-              {allValid ? (
-                <CheckCircle2 className="w-8 h-8" />
-              ) : (
-                <XCircle className="w-8 h-8" />
-              )}
-            </div>
-            <div>
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">
+          <div className="space-y-8">
+            <div className="text-center">
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 ${
+                allValid
+                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-glow-secondary'
+                  : 'bg-gradient-to-br from-red-500 to-red-700'
+              }`}>
+                {allValid ? (
+                  <Sparkles className="w-10 h-10 text-white animate-pulse" />
+                ) : (
+                  <XCircle className="w-10 h-10 text-white" />
+                )}
+              </div>
+              
+              <h2 className="text-3xl font-bold text-slate-800 mb-3">
                 {allValid
-                  ? '¡Archivos listos para análisis!'
-                  : 'Hay errores que necesitan ser corregidos'}
-              </h3>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  ? '¡Archivos Listos para Análisis!'
+                  : 'Errores Detectados'}
+              </h2>
+              <p className="text-slate-600 text-lg">
                 {allValid
-                  ? 'Todos los archivos han sido validados correctamente y están listos para ser analizados.'
-                  : 'Por favor, regresa al paso anterior y corrige los errores encontrados en los archivos.'}
+                  ? 'Todos los archivos han sido validados correctamente y están listos para ser procesados.'
+                  : 'Se encontraron errores que deben ser corregidos antes de continuar.'}
               </p>
             </div>
+
             {allValid && (
-              <div className="mt-8 space-y-4">
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium">Selecciona el webhook de n8n:</label>
-                  <select
-                    className="border rounded px-3 py-2 w-full max-w-md"
-                    value={selectedWebhook}
-                    onChange={e => setSelectedWebhook(e.target.value)}
-                  >
-                    <option value="">-- Selecciona un webhook --</option>
-                    {webhooks.map(w => (
-                      <option key={w.id} value={w.id}>
-                        {w.name} ({w.path || w.url})
-                      </option>
-                    ))}
-                  </select>
-                  {webhookError && <p className="text-red-600 mt-2">{webhookError}</p>}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-accent-teal to-emerald-600 rounded-xl flex items-center justify-center">
+                    <Link2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-800">Configuración de Webhook</h3>
+                    <p className="text-slate-600">Selecciona el webhook para procesar los archivos</p>
+                  </div>
                 </div>
-                <button
-                  onClick={handleAnalysis}
-                  disabled={isAnalyzing || !selectedWebhook}
-                  className="btn-primary text-lg px-8 py-3"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Analizando...
-                    </>
-                  ) : (
-                    'Iniciar Análisis'
-                  )}
-                </button>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
+                      Webhook de n8n
+                    </label>
+                    <select
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors bg-slate-50/50 hover:bg-white"
+                      value={selectedWebhook}
+                      onChange={e => setSelectedWebhook(e.target.value)}
+                    >
+                      <option value="">-- Selecciona un webhook --</option>
+                      {webhooks.map(w => (
+                        <option key={w.id} value={w.id}>
+                          {w.name} ({w.path || w.url})
+                        </option>
+                      ))}
+                    </select>
+                    {webhookError && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-700 text-sm font-medium">{webhookError}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-center pt-6">
+                    <button
+                      onClick={handleAnalysis}
+                      disabled={isAnalyzing || !selectedWebhook}
+                      className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary text-lg"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          Analizando archivos...
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle className="w-6 h-6" />
+                          Iniciar Análisis
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
+            
             {renderAnalysisResults()}
           </div>
         );
@@ -441,22 +554,28 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
 
     if (analysisResult.htmlReport) {
       return (
-        <div className="mt-8 space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Reporte de Análisis
-              </h3>
-              <button
-                onClick={handleDownloadReport}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Descargar Reporte
-              </button>
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-slate-800">Reporte de Análisis</h3>
+                <p className="text-slate-600">Resultados del procesamiento de archivos</p>
+              </div>
             </div>
+            <button
+              onClick={handleDownloadReport}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-secondary-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-secondary-600 hover:to-secondary-800 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <FileText className="w-5 h-5" />
+              Descargar Reporte
+            </button>
+          </div>
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
             <div
-              style={{ width: '100%' }}
+              className="w-full h-96 overflow-auto bg-slate-50"
               dangerouslySetInnerHTML={{ __html: extractHtml(analysisResult.htmlReport) }}
             />
           </div>
@@ -465,17 +584,18 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
     }
 
     return (
-      <div className="mt-8 space-y-6">
+      <div className="space-y-6">
         {analysisResult.blockingIssues && analysisResult.blockingIssues.length > 0 && (
-          <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <h4 className="text-lg font-medium text-red-800 dark:text-red-200 flex items-center">
-              <XCircle className="w-5 h-5 mr-2" />
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
+            <h4 className="text-xl font-semibold text-red-800 flex items-center gap-3 mb-4">
+              <XCircle className="w-6 h-6" />
               Problemas Bloqueantes
             </h4>
-            <ul className="mt-2 space-y-2">
+            <ul className="space-y-2">
               {analysisResult.blockingIssues.map((issue, index) => (
-                <li key={index} className="text-red-700 dark:text-red-300">
-                  {issue}
+                <li key={index} className="flex items-start gap-3 text-red-700">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span>{issue}</span>
                 </li>
               ))}
             </ul>
@@ -483,15 +603,16 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
         )}
 
         {analysisResult.warnings && analysisResult.warnings.length > 0 && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <h4 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 flex items-center">
-              <AlertTriangle className="w-5 h-5 mr-2" />
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6">
+            <h4 className="text-xl font-semibold text-yellow-800 flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6" />
               Advertencias
             </h4>
-            <ul className="mt-2 space-y-2">
+            <ul className="space-y-2">
               {analysisResult.warnings.map((warning, index) => (
-                <li key={index} className="text-yellow-700 dark:text-yellow-300">
-                  {warning}
+                <li key={index} className="flex items-start gap-3 text-yellow-700">
+                  <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span>{warning}</span>
                 </li>
               ))}
             </ul>
@@ -499,15 +620,16 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
         )}
 
         {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
-          <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <h4 className="text-lg font-medium text-green-800 dark:text-green-200 flex items-center">
-              <CheckCircle2 className="w-5 h-5 mr-2" />
+          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6">
+            <h4 className="text-xl font-semibold text-emerald-800 flex items-center gap-3 mb-4">
+              <CheckCircle2 className="w-6 h-6" />
               Recomendaciones
             </h4>
-            <ul className="mt-2 space-y-2">
+            <ul className="space-y-2">
               {analysisResult.recommendations.map((recommendation, index) => (
-                <li key={index} className="text-green-700 dark:text-green-300">
-                  {recommendation}
+                <li key={index} className="flex items-start gap-3 text-emerald-700">
+                  <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span>{recommendation}</span>
                 </li>
               ))}
             </ul>
@@ -518,72 +640,118 @@ const MigracionesPage: React.FC<MigracionesPageProps> = ({ vdcName: initialVdcNa
   };
 
   return (
-    <div className="w-full py-8 px-4 p-8">
-      {/* Botón para cerrar si es modal */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl z-10"
-        >
-          &times;
-        </button>
-      )}
-      {/* Stepper */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between">
-          {[1, 2, 3].map((step) => (
-            <div key={step} className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                step === activeStep 
-                  ? 'bg-primary text-white' 
-                  : step < activeStep 
-                    ? 'bg-primary/20 text-primary' 
-                    : 'bg-gray-100 text-gray-400'
-              }`}>
-                {step < activeStep ? <CheckCircle2 className="w-6 h-6" /> : step}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-slate-900/95 via-primary-950/95 to-slate-900/95 backdrop-blur-xl border-b border-white/10">
+        <div className="px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all duration-300 group"
+                >
+                  <ArrowLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
+                </button>
+              )}
+              
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-accent-purple rounded-xl shadow-glow-primary flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">
+                    Nueva Migración: {vdcName || 'Sin nombre'}
+                  </h1>
+                  <p className="text-slate-300">Configura tu migración VMware Cloud Foundation</p>
+                </div>
               </div>
-              <span className="mt-2 text-sm font-medium text-gray-600">
-                {step === 1 ? 'Carga de Archivos' : step === 2 ? 'Validación' : 'Confirmación'}
-              </span>
             </div>
-          ))}
-        </div>
-        <div className="relative mt-4">
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2">
-            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${((activeStep - 1) / 2) * 100}%` }} />
           </div>
         </div>
       </div>
 
-      {/* Step Content */}
-      {renderStepContent()}
-
-      {/* Action Buttons */}
-      {activeStep < 3 && (
-        <div className="mt-8 flex justify-end space-x-4">
-          <button
-            onClick={() => setActiveStep(activeStep - 1)}
-            disabled={activeStep === 1}
-            className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Anterior
-          </button>
-          <button
-            onClick={handleNextStep}
-            disabled={activeStep === 1 && files.some(f => !f.file) || isValidating}
-            className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isValidating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Validando...
-              </>
-            ) : (
-              'Siguiente'
-            )}
-          </button>
+      <div className="px-8 py-8">
+        {/* Stepper */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
+            {[
+              { step: 1, title: 'Carga de Archivos', icon: Upload },
+              { step: 2, title: 'Validación', icon: Shield },
+              { step: 3, title: 'Análisis', icon: Activity }
+            ].map(({ step, title, icon: Icon }) => (
+              <div key={step} className="flex flex-col items-center">
+                <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                  step === activeStep 
+                    ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-glow-primary transform scale-110' 
+                    : step < activeStep 
+                      ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg' 
+                      : 'bg-slate-200 text-slate-500'
+                }`}>
+                  {step < activeStep ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                  
+                  {step === activeStep && (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 to-accent-purple/20 rounded-2xl opacity-100 transition-opacity blur-sm animate-pulse"></div>
+                  )}
+                </div>
+                <span className={`mt-3 text-sm font-semibold transition-colors ${
+                  step === activeStep 
+                    ? 'text-primary-600' 
+                    : step < activeStep 
+                      ? 'text-emerald-600' 
+                      : 'text-slate-500'
+                }`}>
+                  {title}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="relative mt-6 max-w-2xl mx-auto">
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 rounded-full">
+              <div 
+                className="h-full bg-gradient-to-r from-primary-500 to-accent-purple transition-all duration-500 rounded-full" 
+                style={{ width: `${((activeStep - 1) / 2) * 100}%` }} 
+              />
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Step Content */}
+        <div className="max-w-4xl mx-auto">
+          {renderStepContent()}
+        </div>
+
+        {/* Action Buttons */}
+        {activeStep < 3 && (
+          <div className="mt-12 flex justify-center gap-4 max-w-4xl mx-auto">
+            <button
+              onClick={() => setActiveStep(activeStep - 1)}
+              disabled={activeStep === 1}
+              className="flex items-center gap-2 px-6 py-3 text-slate-700 bg-white border border-slate-300 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Anterior
+            </button>
+            <button
+              onClick={handleNextStep}
+              disabled={activeStep === 1 && files.some(f => !f.file) || isValidating}
+              className="flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary"
+            >
+              {isValidating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Validando...
+                </>
+              ) : (
+                <>
+                  Siguiente
+                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

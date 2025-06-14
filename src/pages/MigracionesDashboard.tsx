@@ -21,7 +21,10 @@ import {
   Filter,
   MoreHorizontal,
   Download,
-  RefreshCw
+  RefreshCw,
+  X,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import MigracionesPage from './MigracionesPage';
 
@@ -139,57 +142,92 @@ const MigracionesDashboard = () => {
     console.log('Assessment:', id);
   };
 
-  // Show new migration flow
-  if (showNew) {
-    if (!vdcName) {
-      return (
-        <div className="min-h-full flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Nueva Migración</h2>
-                <p className="text-slate-600">Ingresa el nombre del VDC para comenzar</p>
+  // Show new migration modal
+  if (showNew && !vdcName) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/50 overflow-hidden">
+          {/* Modal Header */}
+          <div className="relative bg-gradient-to-r from-primary-500 via-primary-600 to-accent-purple p-8 text-white">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 via-accent-purple/10 to-primary-700/20 animate-pulse-slow"></div>
+            
+            <button
+              onClick={handleCloseNew}
+              className="absolute top-4 right-4 p-2 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group"
+            >
+              <X className="w-5 h-5 transform group-hover:rotate-90 transition-transform" />
+            </button>
+            
+            <div className="relative flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center shadow-glow-primary">
+                <Sparkles className="w-8 h-8 text-white animate-pulse" />
               </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nombre del VDC
-                  </label>
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Nueva Migración</h2>
+                <p className="text-white/80 font-medium mt-1">Configura tu migración VCF</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Modal Content */}
+          <div className="p-8 space-y-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Server className="w-6 h-6 text-primary-600" />
+              </div>
+              <p className="text-slate-600 font-medium">
+                Ingresa el nombre del VDC que deseas migrar
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Nombre del VDC
+                </label>
+                <div className="relative">
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                    className="w-full px-4 py-4 pl-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 bg-slate-50/50 hover:bg-white text-slate-700 font-medium placeholder-slate-400"
                     value={inputVdc}
                     onChange={e => setInputVdc(e.target.value)}
                     placeholder="Ej: 01-PROD-PRESIDENCIA-S01"
                   />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FileText className="w-5 h-5 text-slate-400" />
+                  </div>
                 </div>
-                
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => inputVdc.trim() && setVdcName(inputVdc.trim())}
-                    disabled={!inputVdc.trim()}
-                    className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 transition-all duration-200"
-                  >
-                    Continuar
-                  </button>
-                  <button
-                    onClick={handleCloseNew}
-                    className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+                <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  Este nombre se usará para identificar tu migración
+                </p>
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => inputVdc.trim() && setVdcName(inputVdc.trim())}
+                  disabled={!inputVdc.trim()}
+                  className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-4 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-glow-primary flex items-center justify-center gap-2"
+                >
+                  <Play className="w-5 h-5" />
+                  Continuar
+                </button>
+                <button
+                  onClick={handleCloseNew}
+                  className="px-6 py-4 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all duration-300"
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>
         </div>
-      );
-    }
-    
+      </div>
+    );
+  }
+  
+  // Show migration page
+  if (showNew && vdcName) {
     return (
       <div className="h-full">
         <MigracionesPage vdcName={vdcName} onClose={handleCloseNew} />
@@ -212,7 +250,7 @@ const MigracionesDashboard = () => {
         
         <button
           onClick={handleNewMigration}
-          className="flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-xl shadow-lg hover:from-primary-600 hover:to-primary-800 transition-all duration-200 font-semibold"
+          className="flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-xl shadow-lg hover:from-primary-600 hover:to-primary-800 transition-all duration-200 font-semibold transform hover:scale-105 hover:shadow-glow-primary"
         >
           <Plus className="w-5 h-5" />
           Nueva Migración
